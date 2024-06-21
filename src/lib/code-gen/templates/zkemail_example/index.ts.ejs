@@ -1,0 +1,54 @@
+import { generateEmailVerifierInputs } from "@zk-email/helpers";
+import * as path from "path";
+
+const wasm_tester = require("circom_tester").wasm;
+const rawEmail = "";
+
+export async function generateCircuitInputs() {
+    const circuitInputs = await generateEmailVerifierInputs(rawEmail, {
+        ignoreBodyHashCheck: false,
+        maxBodyLength: 4032,
+        shaPrecomputeSelector: "<%- shaPrecomputeSelector %>",
+    });
+
+    const emailBodyString = Buffer.from(circuitInputs.emailBody!.map(Number)).toString('ascii');
+    let regexInputs = {} as any;
+    <% values.forEach(function(value) { %>
+    const match = emailBodyString.match(new RegExp("<%- value.prefixRegex %>"))
+    if (match && match.index) {
+        regexInputs = {
+            ...regexInputs,
+            <%- value.name %>RegexIdx: match.index + match[0].length
+        }
+    }
+    <% }) %>
+
+    return {
+        ...circuitInputs,
+        ...regexInputs,
+    }
+}
+
+try {
+    (async () => {
+
+        const cir = await wasm_tester(
+            path.join(__dirname, "./circuit/<%- name %>.circom"),
+            {
+                include: path.join(__dirname, "./node_modules"),
+                output: path.join(__dirname, "./build/test_<%- name %>"),
+                recompile: true,
+                verbose: true,
+            }
+        );
+
+        const inputs = await generateCircuitInputs()
+        const witness = await cir.calculateWitness(
+            inputs,
+            true
+        );
+        await cir.checkConstraints(witness);
+    })()
+} catch (e) {
+    console.error("caught error: ", e);
+}
