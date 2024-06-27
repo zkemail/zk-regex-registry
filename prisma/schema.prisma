@@ -19,6 +19,7 @@ model Entry {
   updatedAt   DateTime  @updatedAt @map(name: "updated_at")
   createdBy   String
   tags        String[]
+  status      String @default("PENDING")
   parameters   Json
   @@map("entries")
 }

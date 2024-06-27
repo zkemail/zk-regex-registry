@@ -5,6 +5,7 @@ export type Entry = {
     id: string,
     title: string,
     slug: string,
+    status: string,
     description: string,
     createdAt: Date,
     updatedAt: Date,
@@ -49,4 +50,8 @@ export const getEntryBySlug = async (slug: string) => {
 export const getEntryCount = async () => {
     const count = await prisma.entry.count();
     return count
+}
+
+export const updateState = async (id: string, state: string) => {
+    await prisma.entry.update({where: {id}, data: {status: state}});
 }

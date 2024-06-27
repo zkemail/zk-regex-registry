@@ -11,7 +11,7 @@ const EXAMPLE_PROJECT_TYPE = 'zkemail_example';
 // Define the directory path
 const dirPath = './src/lib/code-gen';
 const templatesDir = './src/lib/code-gen/templates'
-const outputDir = './output'
+const outputDir = './output/code'
 
 function generateFromTemplate(templateDir: string, parameters: any, outputDir: string) {
     walkDirectory(templateDir, parameters, outputDir);
