@@ -1,19 +1,6 @@
 import { JsonValue } from "@prisma/client/runtime/library"
 import prisma from "../prisma"
 
-export type Entry = {
-    id: string,
-    title: string,
-    slug: string,
-    status: string,
-    description: string,
-    createdAt: Date,
-    updatedAt: Date,
-    createdBy: string,
-    tags: string[],
-    parameters: any
-}
-
 export type ZkRegexParameters = {
     name: string,
     ignoreBodyHashCheck: boolean,

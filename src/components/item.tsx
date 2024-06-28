@@ -1,15 +1,40 @@
-import {Copy} from "lucide-react"
+import {Copy, Hourglass, CheckCircle} from "lucide-react"
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Entry } from "@/lib/models/entry";
 import { ItemParameterDialog } from "./item-parameter-dialog";
+import { Entry } from "@prisma/client";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+  } from "@/components/ui/tooltip"
 
 
 export const Item = (props: {entry: Entry}) => {
     const entry = props.entry;
+
+    function pendingOrCompleted(status: string) {
+        const icon = (status === "COMPLETED") ? <CheckCircle color="green" className="w-5 h-5 mr-2"/> : <Hourglass color="gray" className="w-5 h-5 mr-2"/>;
+        const tooltip = (status === "COMPLETED") ? "Pattern is ready to be used." : "Pattern is still being compiled and generated in the background.";
+        return (
+            <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                {icon}
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{tooltip}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )
+    }
+
     return (
     <div className="">
         <div className="flex w-full flex-row pb-2 items-center">
+            {pendingOrCompleted(entry.status)}
             <h4 className="font-bold text-xl pr-2">{entry.title}</h4>
             {entry.tags.map((tag) => ( 
                 <Badge key={tag} variant="outline" className="mr-1">{tag}</Badge>

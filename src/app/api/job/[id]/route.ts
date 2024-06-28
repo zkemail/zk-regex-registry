@@ -1,7 +1,7 @@
-import { getEntryById } from "@/lib/models/entry";
 import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
+import { timeToComplete } from "@/lib/models/job";
 
 const CIRCUIT_OUT_DIR = "./output/circuit";
 
@@ -27,6 +27,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     let publicOutput: string | null = null;
     let proof: string | null = null;
+    let estimatedTimeLeft: number = 0;
     
     if (job.status === "COMPLETED") {
         publicOutput = await new Promise((resolve, reject) => {
@@ -48,13 +49,16 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
                 }
             }
         )});
+    } else {
+        estimatedTimeLeft = await timeToComplete(job.id);
     }
 
     return NextResponse.json({
-        jobId: job.id,
-        pollUrl: `/api/proof/${job.id}`,
+        id: job.id,
+        pollUrl: `/api/job/${job.id}`,
         status: job.status,
         publicOutput,
-        proof
+        proof,
+        estimatedTimeLeft
     });
 }

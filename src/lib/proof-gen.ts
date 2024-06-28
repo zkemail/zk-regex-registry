@@ -2,14 +2,15 @@ import { Entry, ProofJob } from "@prisma/client";
 import prisma from "./prisma";
 import { spawn } from "child_process";
 import fs from "fs";
+import { countOfPendingJobs, getAverageProcessingTime, timeToComplete } from "./models/job";
 
 const CIRCUIT_OUT_DIR = "./output/circuit";
 
 interface QueueStatus {
     status: string,
-    jobId: string,
+    id: string,
     pollUrl: string,
-    estimatedDuration: number
+    estimatedTimeLeft: number
 }
 
 export async function queueProofJob(entry: Entry, circuitInput: any, apiKey: string): Promise<QueueStatus> {
@@ -24,30 +25,12 @@ export async function queueProofJob(entry: Entry, circuitInput: any, apiKey: str
         }
     );
 
-    // Check how many jobs are currently pending
-    const processingJobs = (await prisma.proofJob.count({
-        where: {
-            status: "PENDING"
-        }
-    }));
-
-    // Calculate the estimated duration of a single job
-    // If there are none, then we just use a default value of 120 seconds
-    const average = (await prisma.proofJob.aggregate({
-        _avg: {
-            timeToComplete: true
-        },
-        where: {
-            status: "COMPLETED",
-            // entryId: entry.id,
-        },
-        take: 10
-    }))._avg.timeToComplete || 120;
+    const estimatedTimeLeft = await timeToComplete(job.id);
 
     // Return the proof job id
     return {
-        estimatedDuration: average * processingJobs,
-        jobId: job.id,
+        estimatedTimeLeft,
+        id: job.id,
         pollUrl: `/api/proof/${job.id}`,
         status: job.status,
     }
