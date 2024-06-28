@@ -5,21 +5,49 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url = env("DATABASE_URL") // uses connection pooling
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // uses connection pooling
   directUrl = env("DATABASE_URL") // uses a direct connection
 }
 
 model Entry {
-  id          String     @default(cuid()) @id
+  id          String     @id @default(cuid())
   title       String
   slug        String
   description String
-  createdAt   DateTime @default(now()) @map(name: "created_at")
-  updatedAt   DateTime  @updatedAt @map(name: "updated_at")
+  createdAt   DateTime   @default(now()) @map(name: "created_at")
+  updatedAt   DateTime   @updatedAt @map(name: "updated_at")
   createdBy   String
   tags        String[]
-  status      String @default("PENDING")
-  parameters   Json
+  status      String     @default("PENDING")
+  parameters  Json
+  ProofJob    ProofJob[]
+
   @@map("entries")
+}
+
+model ProofJob {
+  id             String   @id @default(cuid())
+  createdBy      String
+  creator        ApiKey   @relation(fields: [createdBy], references: [key])
+  entryId        String
+  entry          Entry    @relation(fields: [entryId], references: [id])
+  status         String   @default("PENDING")
+  createdAt      DateTime @default(now()) @map(name: "created_at")
+  updatedAt      DateTime @updatedAt @map(name: "updated_at")
+  timeToComplete Int      @default(0)
+  circuitInput   Json
+
+  @@map("proof_jobs")
+}
+
+model ApiKey {
+  key       String     @id @default(cuid())
+  name      String
+  createdAt DateTime   @default(now()) @map(name: "created_at")
+  updatedAt DateTime   @updatedAt @map(name: "updated_at")
+  status    String     @default("ACTIVE")
+  ProofJob  ProofJob[]
+
+  @@map("api_keys")
 }

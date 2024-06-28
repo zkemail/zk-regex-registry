@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ENV } from "@/lib/env";
-import { compileCircuit, generateZKey } from "@/lib/circuit-gen/gen";
+import { compileCircuit, generateVKey, generateZKey } from "@/lib/circuit-gen/gen";
 import { getEntryById, updateState } from "@/lib/models/entry";
 
 const STATE: { [key: string]: string } = {
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         });
     }
 
-    if (!force || entry.status !== "PENDING") {
+    if (!force && entry.status !== "PENDING") {
         return NextResponse.json({
             description: STATE[entry.status] || "Unknown",
             status: entry.status,
@@ -41,6 +41,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
             status: 409
         });
     }
+
+    await updateState(params.id, "PENDING");
 
     const circuitName =(entry.parameters as any)['name'];
     try {
@@ -51,7 +53,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
             return generateZKey(entry.slug, circuitName, force);
         }).then(() => {
             updateState(params.id, "GENERATING_VKEY");
-            return Promise.resolve();
+            return generateVKey(entry.slug, circuitName, force);
         }).then(() => {
             updateState(params.id, "COMPLETED");
         }).catch((e) => {

@@ -12,7 +12,7 @@ export const Item = (props: {entry: Entry}) => {
         <div className="flex w-full flex-row pb-2 items-center">
             <h4 className="font-bold text-xl pr-2">{entry.title}</h4>
             {entry.tags.map((tag) => ( 
-                <Badge variant="outline" className="mr-1">{tag}</Badge>
+                <Badge key={tag} variant="outline" className="mr-1">{tag}</Badge>
             ))}
         </div>
         <div className="flex w-full items-center text-gray-800">

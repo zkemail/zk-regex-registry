@@ -1,0 +1,39 @@
+const { generateEmailVerifierInputs } = require("@zk-email/helpers");
+const rawEmail = readFile(process.argv[2]);
+
+function readFile(path) {
+    return require("fs").readFileSync(path).toString();
+}
+
+export async function generateCircuitInputs() {
+    const circuitInputs = await generateEmailVerifierInputs(rawEmail, {
+        ignoreBodyHashCheck: false,
+        maxBodyLength: 4032,
+        shaPrecomputeSelector: "<%- shaPrecomputeSelector %>",
+    });
+
+    const emailBodyString = Buffer.from(circuitInputs.emailBody.map(Number)).toString('ascii');
+    let regexInputs = {};
+    <% values.forEach(function(value) { %>
+    const match = emailBodyString.match(new RegExp("<%- value.prefixRegex %>"))
+    if (match && match.index) {
+        regexInputs = {
+            ...regexInputs,
+            <%- value.name %>RegexIdx: match.index + match[0].length
+        }
+    }
+    <% }) %>
+
+    return {
+        ...circuitInputs,
+        ...regexInputs,
+    }
+}
+
+if (process.argv.length != 4) {
+    console.log("Usage: node generate_circuit_inputs.js email.eml input.json");
+} else {
+    generateCircuitInputs().then(inputs => {
+        require("fs").writeFileSync(process.argv[3], JSON.stringify(inputs, null, 2));
+    });
+}

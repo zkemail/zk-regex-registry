@@ -1,6 +1,7 @@
 import path from "path"
 import fs from "fs";
 import { spawn } from "child_process";
+import { genCircomAllstr } from '../code-gen/gen_circom';
 
 const CIRCUIT_OUT_DIR = "./output/circuit"
 const CODE_OUT_DIR = "./output/code"
@@ -70,7 +71,7 @@ export function generateZKey(circuitSlug: string, circuitName: string, force: bo
         });
         c.on('exit', (code, signal) => {
             if (code === 0) {
-                console.log('Process completed successfully');
+                console.log(`Generated ZKey for ${circuitSlug} with name ${circuitName}`);
                 resolve();
             } else {
                 console.log(`Process exited with code ${code}`);
@@ -78,4 +79,52 @@ export function generateZKey(circuitSlug: string, circuitName: string, force: bo
             }
         });
     });
+}
+
+export function generateVKey(circuitSlug: string, circuitName: string, force: boolean): Promise<void> {
+    console.log(`Generating vkey for ${circuitSlug} with name ${circuitName}`);
+    const vKeyPath = path.join(CIRCUIT_OUT_DIR, circuitSlug, circuitName + '_vkey.json');
+    const zkeyPath = path.join(CIRCUIT_OUT_DIR, circuitSlug, circuitName + '.zkey');
+    if (fs.existsSync(vKeyPath)) {
+        if (force) {
+            fs.rmSync(vKeyPath);
+        } else {
+            console.log("Skipping vkey generation")
+            return Promise.resolve();
+        }
+    }
+    // node ../node_modules/.bin/snarkjs zkey export verificationkey "$BUILD_DIR"/"$CIRCUIT_NAME".zkey "$BUILD_DIR"/"$CIRCUIT_NAME"_vkey.json
+    return new Promise<void>((resolve, reject) => {
+        const c = spawn("./node_modules/.bin/snarkjs", ['zkey', 'export', 'verificationkey', zkeyPath, vKeyPath]);
+        c.stdout.on('data', (data) => {
+            process.stdout.write(`stdout: ${data}`);
+        });
+        c.stderr.on('data', (data) => {
+            process.stderr.write(`stdout: ${data}`);
+        });
+        c.on('exit', (code, signal) => {
+            if (code === 0) {
+                console.log(`Generated VKey for ${circuitSlug} with name ${circuitName}`);
+                resolve();
+            } else {
+                console.log(`Process exited with code ${code}`);
+                reject();
+            }
+        });
+    });
+}
+
+export function copyGenerateInputScript(circuitSlug: string, circuitName: string, force: boolean): Promise<void> {
+    const scriptPath = path.join(CODE_OUT_DIR, circuitSlug, "generate_inputs.js");
+    const inputScriptPath = path.join(CIRCUIT_OUT_DIR, circuitSlug, circuitName + "_js", "generate_inputs.js");
+    if (fs.existsSync(inputScriptPath)) {
+        if (force) {
+            fs.rmSync(inputScriptPath);
+        } else {
+            console.log("Skipping input script generation")
+            return Promise.resolve();
+        }
+    }
+    fs.copyFileSync(scriptPath, inputScriptPath);
+    return Promise.resolve();  
 }
