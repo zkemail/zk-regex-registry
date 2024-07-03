@@ -8,18 +8,16 @@ import { Badge } from "@/components/ui/badge";
 //   AccordionTrigger,
 // } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { Header } from "@/components/header";
 import { Item } from "@/components/item";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
-import { Entry, getAllEntries } from "@/lib/models/entry";
+import { getAllEntries } from "@/lib/models/entry";
 import prisma from "@/lib/prisma";
 
 const PAGE_LIMIT = 5;

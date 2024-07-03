@@ -1,33 +1,9 @@
-import { generateEmailVerifierInputs } from "@zk-email/helpers";
 import * as path from "path";
+// @ts-ignore
+import { generateCircuitInputs } from "./lib/generate_inputs";
 
 const wasm_tester = require("circom_tester").wasm;
 const rawEmail = "";
-
-export async function generateCircuitInputs() {
-    const circuitInputs = await generateEmailVerifierInputs(rawEmail, {
-        ignoreBodyHashCheck: false,
-        maxBodyLength: 4032,
-        shaPrecomputeSelector: "<%- shaPrecomputeSelector %>",
-    });
-
-    const emailBodyString = Buffer.from(circuitInputs.emailBody!.map(Number)).toString('ascii');
-    let regexInputs = {} as any;
-    <% values.forEach(function(value) { %>
-    const match = emailBodyString.match(new RegExp("<%- value.prefixRegex %>"))
-    if (match && match.index) {
-        regexInputs = {
-            ...regexInputs,
-            <%- value.name %>RegexIdx: match.index + match[0].length
-        }
-    }
-    <% }) %>
-
-    return {
-        ...circuitInputs,
-        ...regexInputs,
-    }
-}
 
 try {
     (async () => {
@@ -42,7 +18,7 @@ try {
             }
         );
 
-        const inputs = await generateCircuitInputs()
+        const inputs = await generateCircuitInputs(rawEmail)
         const witness = await cir.calculateWitness(
             inputs,
             true

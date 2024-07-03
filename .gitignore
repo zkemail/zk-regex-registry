@@ -37,3 +37,6 @@ next-env.d.ts
 
 # output files from code gen
 /output
+/fixtures
+
+.env

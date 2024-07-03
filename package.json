@@ -30,7 +30,14 @@
     "snarkjs": "^0.7.4",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
-    "tsx": "^4.15.7"
+    "tsx": "^4.15.7",
+    "zk-regex-sdk": "link:./packages/sdk",
+    "crypto-browserify": "^3.12.0",
+    "package-json-versionify": "^1.0.4",
+    "stream-browserify": "^3.0.0",
+    "timers-browserify": "^2.0.12",
+    "vm-browserify": "^1.1.2",
+    "webpack": "^5.92.1"
   },
   "devDependencies": {
     "@types/archiver": "^6.0.2",

@@ -22,6 +22,7 @@ model Entry {
   status      String     @default("PENDING")
   parameters  Json
   ProofJob    ProofJob[]
+  emailQuery  String @default("")
 
   @@map("entries")
 }

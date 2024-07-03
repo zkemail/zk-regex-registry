@@ -5,13 +5,27 @@ import * as path from 'path';
 import archiver from 'archiver';
 import { regexToDfa } from './regex';
 import { genCircomAllstr } from './gen_circom';
+import { spawn } from 'child_process';
 
 const EXAMPLE_PROJECT_TYPE = 'zkemail_example';
 
 // Define the directory path
-const dirPath = './src/lib/code-gen';
 const templatesDir = './src/lib/code-gen/templates'
-const outputDir = './output/code'
+const outputDir = path.join(process.env.GENERATED_OUTPUT_DIR || "./output", 'code')
+console.log("DIRRR", outputDir);
+const unsafeDirPatterns = ['..', '~'];
+
+export const generateCodeLibrary = async (parameters: any, outputName: string):Promise<string> => {
+    for (const pattern of unsafeDirPatterns) {
+        if (outputName.includes(pattern)) {
+            throw new Error('Unsafe directory pattern detected');
+        }
+    }
+    generateFromTemplate(path.join(templatesDir, EXAMPLE_PROJECT_TYPE), parameters, path.join(outputDir, outputName));
+    generateZkRegexCircuit(path.join(outputDir, outputName, "circuit", "regex"), parameters);
+    generateCircuitInputsWorker(path.join(outputDir, outputName), outputName);
+    return await zipDirectory(path.join(outputDir, outputName), path.join(outputDir, `${outputName}-example.zip`))
+}
 
 function generateFromTemplate(templateDir: string, parameters: any, outputDir: string) {
     walkDirectory(templateDir, parameters, outputDir);
@@ -42,19 +56,6 @@ function walkDirectory(currentPath: string, parameters: any, outputDir: string) 
         });
     }
   });
-}
-
-const unsafeDirPatterns = ['..', '~'];
-
-export const generateCodeLibrary = async (parameters: any, outputName: string):Promise<string> => {
-    for (const pattern of unsafeDirPatterns) {
-        if (outputName.includes(pattern)) {
-            throw new Error('Unsafe directory pattern detected');
-        }
-    }
-    generateFromTemplate(path.join(templatesDir, EXAMPLE_PROJECT_TYPE), parameters, path.join(outputDir, outputName));
-    generateZkRegexCircuit(path.join(outputDir, outputName, "circuit", "regex"), parameters);
-    return await zipDirectory(path.join(outputDir, outputName), path.join(outputDir, `${outputName}-example.zip`))
 }
 
 export const zipDirectory = async (dir: string, outFile: string):Promise<string> => {
@@ -88,4 +89,26 @@ export const generateZkRegexCircuit = (outDir: string, parameters: any):void => 
         const circuitStr = genCircomAllstr(minDfa, value.name+"Regex", value.revealStates, value.regex)
         fs.writeFileSync(`${outDir}/${value.name}Regex.circom`, circuitStr);
     }
+}
+
+export const generateCircuitInputsWorker = (outDir: string, outputName: string):void => {
+    const inputFile = path.join(outDir, "generate_inputs_worker.js");
+    console.log(inputFile);
+    const filename = 'generate_inputs_worker_bundled.js';
+    // run the bundler in a child process
+    const bundler = spawn('node', ['./scripts/04_webpack.js', inputFile, outDir, filename]);
+    bundler.stdout.on('data', (data) => {
+        console.log(`stdout: ${data}`);
+    });
+    bundler.stderr.on('data', (data) => {
+        console.error(`stderr: ${data}`);
+    });
+    bundler.on('close', (code) => {
+        // check if file exists
+        if (!fs.existsSync(path.join(outDir, filename))) {
+            console.error('Error bundling worker');
+        }
+        console.log(`child process exited with code ${code}`);
+    });
+
 }

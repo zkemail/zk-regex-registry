@@ -1,0 +1,8 @@
+window = self;
+const { generateCircuitInputs } = require("./lib/generate_inputs");
+
+onmessage = (event) => {
+  generateCircuitInputs(event.data).then(inputs => {
+    postMessage(inputs);
+  });
+};
