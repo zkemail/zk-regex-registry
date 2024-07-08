@@ -17,19 +17,19 @@ export function ItemParameterDialog(props: { entry: Entry }) {
         <Dialog>
             <DialogTrigger asChild>
                 {/* View Parameters */}
-                <Button className="mr-2" variant="outline">View Parameters</Button>
+                <Button className="mr-2" variant="link">View Parameters</Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent  className="overflow-clip">
                 <DialogHeader>
                     <DialogTitle>Pattern Metadata</DialogTitle>
-                    <DialogDescription  className="overflow-scroll">
-                        <code className="text-xs">
-                            <pre>
-                                {JSON.stringify(cleanedParams, null, 2)}
-                            </pre>
-                        </code>
-                    </DialogDescription>
                 </DialogHeader>
+                <DialogDescription className="overflow-scroll">
+                    <code className="text-xs">
+                        <pre>
+                            {JSON.stringify(cleanedParams, null, 2)}
+                        </pre>
+                    </code>
+                </DialogDescription>
             </DialogContent>
         </Dialog>
     )

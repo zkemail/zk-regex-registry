@@ -1,11 +1,10 @@
 import path from "path"
 import fs from "fs";
 import { spawn } from "child_process";
-import { genCircomAllstr } from '../code-gen/gen_circom';
 
 const CIRCUIT_OUT_DIR = "./output/circuit"
 const CODE_OUT_DIR = "./output/code"
-const PTAU_PATH = "./ptau/powersOfTau28_hez_final_23.ptau"
+const PTAU_PATH = process.env.PTAU_PATH || ""
 
 export function compileCircuit(circuitSlug: string, circuitName: string, force: boolean): Promise<void> {
     console.log(`Compiling circuit for ${circuitSlug} with name ${circuitName} and force ${force}`);
@@ -57,6 +56,7 @@ export function generateZKey(circuitSlug: string, circuitName: string, force: bo
 
     const r1csPath = path.join(CIRCUIT_OUT_DIR, circuitSlug, circuitName + '.r1cs');
     return new Promise<void>((resolve, reject) => {
+        console.log('ptua', PTAU_PATH);
         const c = spawn("./node_modules/.bin/snarkjs", ['zkey', 'new', r1csPath, PTAU_PATH, zkeyPath, '-v'], {
             env: {
                 ...process.env,

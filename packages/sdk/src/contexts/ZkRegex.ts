@@ -1,5 +1,14 @@
 import { createContext } from 'react';
 
+export interface ProofStatus {
+  status: string,
+  id: string,
+  pollUrl: string,
+  estimatedTimeLeft: number
+  publicOutput: any,
+  proof: any,
+}
+
 interface ZkRegexValues {
     zkRegexRegistryUrl: string
 
@@ -26,6 +35,9 @@ interface ZkRegexValues {
     deleteProofWorker: (name: string) => void;
     generateProofLocally: (name: string, input: any) => Promise<any>;
 
+    proofStatus: {
+        [key: string]: ProofStatus
+    }
     generateProofRemotely: (name: string, input: any) => Promise<any>;
 }
 
@@ -44,6 +56,7 @@ const defaultValues: ZkRegexValues = {
     deleteProofWorker: () => { console.log("context not setup")},
     generateProofLocally: async () => { console.log("context not setup");},
 
+    proofStatus: {},
     generateProofRemotely: async () => { console.log("context not setup");}
 }
 

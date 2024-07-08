@@ -31,7 +31,7 @@ export async function queueProofJob(entry: Entry, circuitInput: any, apiKey: str
     return {
         estimatedTimeLeft,
         id: job.id,
-        pollUrl: `/api/proof/${job.id}`,
+        pollUrl: `/api/job/${job.id}`,
         status: job.status,
     }
 }

@@ -1,7 +1,7 @@
 'use client';
 import GoogleAuthProvider from "./src/providers/GoogleAuthProvider";
 import GoogleAuthContext from "./src/contexts/GoogleAuth";
-import ZkRegexContext from "./src/contexts/ZkRegex";
+import ZkRegexContext, { ProofStatus } from "./src/contexts/ZkRegex";
 import useGoogleAuth from "./src/hooks/useGoogleAuth";
 import { fetchEmailList, fetchEmailsRaw, fetchProfile } from "./src/hooks/useGmailClient";
 import { ReactNode, useState } from "react";
@@ -10,36 +10,70 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import useZkRegex from './src/hooks/useZkRegex';
 
 interface ProvidersProps {
-    children: ReactNode;
-    clientId: string;
-    zkRegexRegistryUrl: string;
-  }
+  children: ReactNode;
+  clientId: string;
+  zkRegexRegistryUrl: string;
+}
 
 function ZkRegexProvider({children, clientId, zkRegexRegistryUrl}: ProvidersProps) {
 
   const [inputWorkers, setInputWorkers] = useState<Record<string, Worker>>({});
+  const [proofStatus, setProofStatus] = useState<Record<string, ProofStatus>>({});
+
+  function createInputWorker(name: string): void {
+      const w = new Worker(`${zkRegexRegistryUrl}/api/script/${name}/circuit_input`)
+      setInputWorkers({...inputWorkers, [name]: w});
+  }
+
+  async function generateInputFromEmail(name: string, email: string) {
+      const worker = inputWorkers[name];
+      return new Promise((resolve, reject) => {
+        worker.onmessage = (event: any) => {
+          if (event.data.error) {
+            reject(event.data.error);
+          } else {
+            resolve(event.data);
+          }
+        }
+        worker.postMessage(email);
+      });
+  }
+
+  async function generateProofRemotely(name: string, input: any) {
+    const res = await fetch(`${zkRegexRegistryUrl}/api/proof/${name}`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = await res.json();
+    setProofStatus((prev) => ({...prev, [data.id]:data}));
+    if (data.pollUrl) {
+      poolForProofStatus(data.pollUrl)
+    }
+    return data;
+  }
+
+  async function poolForProofStatus(url: string) {
+    const res = await fetch(url);
+    const data = await res.json();
+    setProofStatus((prev) => ({...prev, [data.id]:data}));
+    if (data.status !== 'COMPLETED') {
+      setTimeout(() => poolForProofStatus(url), 5000);
+    } 
+  }
 
   const contextValues = {
     zkRegexRegistryUrl,
     customInputGenWorkerSrc: {},
     inputWorkers,
-    createInputWorker: function (name: string): void {
-      const w = new Worker(`${zkRegexRegistryUrl}/api/script/${name}/circuit_input`)
-      setInputWorkers({...inputWorkers, [name]: w});
+    createInputWorker,
+    deleteInputWorker: function (name: string): void {
+      inputWorkers[name].terminate();
+      delete inputWorkers[name];
     },
-    deleteInputWorker: function (_name: string): void {
-      throw new Error("Function not implemented.");
-    },
-    generateInputFromEmail: function (name: string, email: string): Promise<any> {
-      const worker = inputWorkers[name];
-      // TODO: handle failure
-      return new Promise((resolve) => {
-        worker.onmessage = (event) => {
-          resolve(event.data);
-        }
-        worker.postMessage(email);
-      });
-    },
+    generateInputFromEmail,
     customProofGenWorkerSrc: {},
     proofWorkers: {},
     createProofWorker: function (_name: string): void {
@@ -51,9 +85,8 @@ function ZkRegexProvider({children, clientId, zkRegexRegistryUrl}: ProvidersProp
     generateProofLocally: async function (_name: string, _input: any): Promise<any> {
       throw new Error("Function not implemented.");
     },
-    generateProofRemotely: async function (_name: string, _input: any): Promise<any> {
-      throw new Error("Function not implemented.");
-    }
+    proofStatus,
+    generateProofRemotely,
   } 
 
 

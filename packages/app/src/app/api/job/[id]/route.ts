@@ -6,7 +6,8 @@ import { timeToComplete } from "@/lib/models/job";
 const CIRCUIT_OUT_DIR = "./output/circuit";
 
 export async function GET(request: NextRequest, { params }: { params: { id: string }}) {
-    const token = Buffer.from(request.headers.get('Authorization')?.split('Bearer ')[1] || '', 'base64').toString().trim();
+    let token = Buffer.from(request.headers.get('Authorization')?.split('Bearer ')[1] || '', 'base64').toString().trim();
+    token = token || "guest"; 
 
     const job = await prisma.proofJob.findFirst({
         where: {
@@ -25,12 +26,12 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         })
     }
 
-    let publicOutput: string | null = null;
-    let proof: string | null = null;
+    let publicOutput: any | null = null;
+    let proof: any | null = null;
     let estimatedTimeLeft: number = 0;
     
     if (job.status === "COMPLETED") {
-        publicOutput = await new Promise((resolve, reject) => {
+        publicOutput = JSON.parse(await new Promise((resolve, reject) => {
             fs.readFile(`${CIRCUIT_OUT_DIR}/${job.entry.slug}/proofs/${job.id}/public.json`, 'utf-8', (err, data) => {
                 if (err) {
                     reject(err);
@@ -38,9 +39,9 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
                     resolve(data);
                 }
             }
-        )});
+        )}));
 
-        proof = await new Promise((resolve, reject) => {
+        proof = JSON.parse(await new Promise((resolve, reject) => {
             fs.readFile(`${CIRCUIT_OUT_DIR}/${job.entry.slug}/proofs/${job.id}/proof.json`, 'utf-8', (err, data) => {
                 if (err) {
                     reject(err);
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
                     resolve(data);
                 }
             }
-        )});
+        )}));
     } else {
         estimatedTimeLeft = await timeToComplete(job.id);
     }

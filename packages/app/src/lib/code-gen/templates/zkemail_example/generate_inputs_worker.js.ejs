@@ -4,5 +4,8 @@ const { generateCircuitInputs } = require("./lib/generate_inputs");
 onmessage = (event) => {
   generateCircuitInputs(event.data).then(inputs => {
     postMessage(inputs);
-  });
+  }).catch((err) => {
+    console.error(err);
+    postMessage({ error: err });
+  })
 };

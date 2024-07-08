@@ -96,7 +96,7 @@ export const generateCircuitInputsWorker = (outDir: string, outputName: string):
     console.log(inputFile);
     const filename = 'generate_inputs_worker_bundled.js';
     // run the bundler in a child process
-    const bundler = spawn('node', ['./scripts/04_webpack.js', inputFile, outDir, filename]);
+    const bundler = spawn('node', ['./src/lib/code-gen/webpack.js', inputFile, outDir, filename]);
     bundler.stdout.on('data', (data) => {
         console.log(`stdout: ${data}`);
     });
