@@ -40,7 +40,7 @@
     "tsx": "^4.15.7",
     "vm-browserify": "^1.1.2",
     "webpack": "^5.92.1",
-    "zk-regex-sdk": "link:./packages/sdk"
+    "zk-regex-sdk": "link:../sdk"
   },
   "devDependencies": {
     "@types/archiver": "^6.0.2",
