@@ -32,8 +32,8 @@ return (
             {navigationItems.map((item) => (
                 <NavigationMenuItem key={item.title}>
                     <>
-                    <NavigationMenuLink>
-                        <Button variant="ghost">{item.title}</Button>
+                    <NavigationMenuLink href={item.href}>
+                        <Button variant="ghost" >{item.title}</Button>
                     </NavigationMenuLink>
                     </>
                 </NavigationMenuItem>
@@ -51,7 +51,7 @@ return (
           </div>
         <div className="flex justify-end w-full gap-4">
             <div className="border-r hidden md:inline"></div>
-                <Button>Sign in</Button>
+                {/* <Button>Sign in</Button> */}
         </div>
         <div className="flex w-12 shrink lg:hidden items-end justify-end">
         <Button variant="ghost" onClick={() => setOpen(!isOpen)}>
