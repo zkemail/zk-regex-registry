@@ -42,3 +42,8 @@ export const getEntryCount = async () => {
 export const updateState = async (id: string, state: string) => {
     await prisma.entry.update({where: {id}, data: {status: state}});
 }
+
+export const getFirstPendingEntry = async () => {
+    const entry = await prisma.entry.findFirst({where: {status: "PENDING"}, orderBy: {createdAt: 'asc'}});
+    return entry
+}

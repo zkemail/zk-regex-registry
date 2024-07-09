@@ -3,26 +3,27 @@ import { ENV } from "@/lib/env";
 import { compileCircuit, generateVKey, generateZKey } from "@/lib/circuit-gen/gen";
 import { getEntryById, updateState } from "@/lib/models/entry";
 
-const STATE: { [key: string]: string } = {
+export const STATE: { [key: string]: string } = {
     "PENDING": "Circuit generation in progress",
     "COMPILING": "Compiling circuit",
     "GENERATING_ZKEY": "Generating zkey",
     "GENERATING_VKEY": "Generating vkey",
     "COMPLETED": "Completed",
+    "ERROR": "Error occurred",
 };
 
 export async function POST(request: NextRequest, { params }: { params: { id: string }}) {
 
     const force = request.nextUrl.searchParams.get('force') === 'true' ? true : false;
     // TODO: Refactor this to use a decorator
-    const token = request.headers.get('Authorization')?.split('Bearer ')[1];
-    if (token && ENV.SECRET_TOKEN !== Buffer.from(token, 'base64').toString().trim()) {
-        return NextResponse.json({
-            error: 'Unauthorized'
-        }, {
-            status: 401
-        });
-    }
+    // const token = request.headers.get('Authorization')?.split('Bearer ')[1];
+    // if (token && ENV.SECRET_TOKEN !== Buffer.from(token, 'base64').toString().trim()) {
+    //     return NextResponse.json({
+    //         error: 'Unauthorized'
+    //     }, {
+    //         status: 401
+    //     });
+    // }
 
     const entry = await getEntryById(params.id);
     if (!entry) {
