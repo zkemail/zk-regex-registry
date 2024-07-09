@@ -4125,6 +4125,11 @@ possible-typed-array-names@^1.0.0:
   resolved "https://registry.npmjs.org/possible-typed-array-names/-/possible-typed-array-names-1.0.0.tgz"
   integrity sha512-d7Uw+eZoloe0EHDIYoe+bQ5WXnGMOpmiZFTuMWCwpjzzkL2nTjcKiAk4hh8TjnGye2TwWOk3UXucZ+3rbmBa8Q==
 
+postal-mime@^2.2.5:
+  version "2.2.5"
+  resolved "https://registry.yarnpkg.com/postal-mime/-/postal-mime-2.2.5.tgz#2bd44a1efd553ba64b9072712967a0e1e3a0b8e8"
+  integrity sha512-6eTJf+B47JMdDuLF/4MBiGpTinxl0W8bA9CzrSoiQrNVRqK8Vhe59VrS6sXh2lG/lgo0bxpZFcWOF4Dv1FaSfg==
+
 postcss-import@^15.1.0:
   version "15.1.0"
   resolved "https://registry.npmjs.org/postcss-import/-/postcss-import-15.1.0.tgz"

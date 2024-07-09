@@ -9,7 +9,8 @@ import { RawEmailResponse } from "zk-regex-sdk/dist/hooks/useGmailClient";
 import { Check, X } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ProofStatus } from '../../../../../sdk/src/contexts/ZkRegex';
+import PostalMime from 'postal-mime';
+import { parse } from "path";
 
 export interface ContentProps {
     entry: Entry
@@ -150,7 +151,7 @@ export function PageContent(props: ContentProps) {
 
     function displayProofJobs() {
         if (Object.keys(proofStatus).length === 0) {
-            return <p>Start a proof job</p>
+            return 
         } else {
             return (<Table>
             <TableHeader>
@@ -198,20 +199,19 @@ export function PageContent(props: ContentProps) {
                     console.log(contents);
                     if (typeof contents === "string") {
                         let inputs: any;
-                        let error, body, subject: string | undefined;
+                        let error, body: string | undefined;
+                        const parsed = await PostalMime.parse(contents)
                         try {
                             inputs = await generateInputFromEmail(entry.id, contents);
+                            console.log(inputs);
                             body = Buffer.from(inputs.emailBody).toString('utf-8');
-                            subject = Buffer.from(inputs.emailSubject).toString('utf-8');
                         } catch (e: any) {
-                            console.log("in try catch")
-
                             error = e.toString();
                         }
                         const email: Email = {
                             decodedContents: contents,
-                            internalDate: "" + file.lastModified,
-                            subject: subject || file.name,
+                            internalDate: "" + (parsed.date ? Date.parse(parsed.date) : file.lastModified),
+                            subject: parsed.subject || file.name,
                             selected: false,
                             body,
                             inputs,
@@ -232,7 +232,9 @@ export function PageContent(props: ContentProps) {
                     <div className="flex text-left justify-center items-center gap-4 flex-col">
                         <div className="flex gap-2 flex-col">
                             <div className="mb-4">
-                                <pre>{"< " + entry.slug}</pre>
+                                <h2 className="text-4xl md:text-5xl tracking-tighter max-w-xl text-left font-extrabold mb-6">
+                                    {entry.slug}
+                                </h2>
                                 <h4 className="text-2xl md:text-2xl tracking-tighter max-w-xl text-left font-extrabold mb-4 mt-4">
                                     Step 1: Provide an email sample
                                 </h4>
@@ -259,12 +261,9 @@ export function PageContent(props: ContentProps) {
                             </div>
                             <div className="mb-4">
                                 <h4 className="text-2xl md:text-2xl tracking-tighter max-w-xl text-left font-extrabold mb-4">
-                                    Step 3: Verify the proofs directly in your browswer
+                                    Step 3: View generated proofs
                                 </h4>
                                 {displayProofJobs()}
-                                <div>
-                                    <Button>Verify proof</Button>
-                                </div>
                             </div>
                         </div>
                     </div>
