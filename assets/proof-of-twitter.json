@@ -1,0 +1,15 @@
+{
+    "name": "twitterProof",
+    "values": [
+      {
+        "name": "handle",
+        "regex": "email was meant for @[a-zA-Z0-9]+",
+        "location": "body",
+        "maxLength": 64,
+        "prefixRegex": "email was meant for @",
+        "revealStates": "[[[22,1],[1,1]]]"
+      }
+    ],
+    "ignoreBodyHashCheck": false,
+    "shaPrecomputeSelector": ">Not my account<"
+  }
