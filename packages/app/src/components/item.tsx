@@ -13,6 +13,7 @@ import {
 
 export const Item = (props: {entry: Entry}) => {
     const entry = props.entry;
+    const parameters = entry.parameters as any;
 
     function pendingOrCompleted(status: string) {
         const icon = (status === "COMPLETED") ? <CheckCircle color="green" className="w-5 h-5 mr-2"/> : <Hourglass color="gray" className="w-5 h-5 mr-2"/>;
@@ -48,7 +49,7 @@ export const Item = (props: {entry: Entry}) => {
         </div>
         <div className="w-full">
             <p className="">{entry.description}</p>
-            <p>Extractable values: {entry.parameters.values.map((v:any) => v.name).join(", ")}</p>
+            <p>Extractable values: {parameters.values.map((v:any) => v.name).join(", ")}</p>
         </div>
         <div className="w-full mt-2">
             <a href={"/try/"+entry.id}><Button className="mr-2" disabled={entry.status !== "COMPLETED"}>Try it out</Button></a>

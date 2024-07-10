@@ -6,12 +6,11 @@ import { readFileSync, statSync } from "fs";
 export async function GET(request: NextRequest, { params }: { params: { id: string }}) {
     const entry = await getEntryById(params.id);
     if (!entry) {
-        return {
-            status: 404,
-            body: {
-                error: 'Entry not found'
-            }
-        }
+        return NextResponse.json({
+            error: 'Entry not found'
+        }, {
+            status: 404
+        })
     }
     const output = await generateCodeLibrary(entry.parameters, entry.slug);
     const stats = statSync(output);

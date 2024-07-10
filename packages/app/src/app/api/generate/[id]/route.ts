@@ -3,7 +3,7 @@ import { ENV } from "@/lib/env";
 import { compileCircuit, generateVKey, generateZKey } from "@/lib/circuit-gen/gen";
 import { getEntryById, updateState } from "@/lib/models/entry";
 
-export const STATE: { [key: string]: string } = {
+const STATE: { [key: string]: string } = {
     "PENDING": "Circuit generation in progress",
     "COMPILING": "Compiling circuit",
     "GENERATING_ZKEY": "Generating zkey",

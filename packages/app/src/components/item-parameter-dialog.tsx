@@ -1,16 +1,18 @@
-import { Entry } from "@/lib/models/entry";
 import { Dialog, DialogClose, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogHeader } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Entry } from "@prisma/client";
 
 export function ItemParameterDialog(props: { entry: Entry }) {
-    const cleanedValues = props.entry.parameters.values.map((v: any) => {
+    const parameters = props.entry.parameters as any;
+    if (!parameters|| !parameters.values) return;
+    const cleanedValues = parameters.values.map((v: any) => {
         return {
             ...v,
             revealStates: JSON.stringify(v.revealStates)
         }
     });
     const cleanedParams = {
-            ...props.entry.parameters,
+            ...parameters,
             values: cleanedValues
     }
     return (
