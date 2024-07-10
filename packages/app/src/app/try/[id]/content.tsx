@@ -5,7 +5,6 @@ import { Entry } from "@prisma/client";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { useState, useEffect, FormEvent } from "react";
 import { useGoogleAuth, fetchEmailList, fetchEmailsRaw, fetchProfile, useZkRegex } from "zk-regex-sdk";
-import { RawEmailResponse } from "zk-regex-sdk/dist/hooks/useGmailClient";
 import { Check, X } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -16,8 +15,13 @@ export interface ContentProps {
     entry: Entry
 }
 
-type Email = RawEmailResponse & { selected: boolean, inputs?: any, error?: string, body?: string };
+type RawEmailResponse = {
+    subject: string;
+    internalDate: string;
+    decodedContents: string;
+};
 
+type Email = RawEmailResponse & { selected: boolean, inputs?: any, error?: string, body?: string };
 
 export function PageContent(props: ContentProps) {
     const entry = props.entry;
