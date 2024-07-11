@@ -3,11 +3,14 @@ import * as path from "path";
 import { generateCircuitInputs } from "./lib/generate_inputs";
 
 const wasm_tester = require("circom_tester").wasm;
-const rawEmail = "";
+const rawEmail = ``;
 
 try {
     (async () => {
-
+        if (!rawEmail) {
+            console.error("raw email is missing, update index.ts to paste the entire email (header + body)")
+            process.exit(1);
+        }
         const cir = await wasm_tester(
             path.join(__dirname, "./circuit/<%- name %>.circom"),
             {

@@ -43,9 +43,10 @@ export default async function Home({searchParams: {page}}: {searchParams: {page:
               </p>
             </div>
             <div>
-              <Button className="gap-2" variant="outline">
+              <Button className="gap-2 mr-4" variant="outline">
                 Any questions? Reach out <Mail className="w-4 h-4" />
               </Button>
+              <a href="/submit" className="gap-2"><Button>Submit a new pattern</Button></a>
             </div>
           </div>
 
