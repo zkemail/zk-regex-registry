@@ -234,12 +234,12 @@ export function PageContent(props: ContentProps) {
             <div className="container mx-auto">
                 <div className="flex flex-col gap-10">
                     <div className="flex text-left justify-center items-center gap-4 flex-col">
-                        <div className="flex gap-2 flex-col">
+                        <div className="flex gap-2 flex-col w-full">
                             <div className="mb-4">
-                                <h2 className="text-4xl md:text-5xl tracking-tighter max-w-xl text-left font-extrabold mb-6">
+                                <h2 className="text-3xl md:text-5xl tracking-tighter text-left font-extrabold mb-6">
                                     {entry.slug}
                                 </h2>
-                                <h4 className="text-2xl md:text-2xl tracking-tighter max-w-xl text-left font-extrabold mb-4 mt-4">
+                                <h4 className="text-xl md:text-2xl tracking-tighter text-left font-extrabold mb-4 mt-4">
                                     Step 1: Provide an email sample
                                 </h4>
                                 <p className="mb-4">You can either connect your gmail or upload a .eml file. Your google API key is kept locally and never sent out to any of our servers.</p>
@@ -252,15 +252,15 @@ export function PageContent(props: ContentProps) {
                                 </div>
                             </div>
                             <div className="mb-4">
-                                <h4 className="text-2xl md:text-2xl tracking-tighter max-w-xl text-left font-extrabold mb-4">
+                                <h4 className="text-xl md:text-2xl tracking-tighter text-left font-extrabold mb-4">
                                     Step 2: Select the emails you want the proofs created for
                                 </h4>
                                 <p>Choose the emails you want to create proofs for. You can select multiple emails.</p>
                                 <p>If you select to create the proofs remotely, your emails will be sent to our secured service for proof generation. Emails will be deleted once the proofs are generated</p>
                                 {displayEmailList()}
                                 <div>
-                                    <Button onClick={startProofGeneration}>Create proof locally</Button>
-                                    <Button className='ml-4'>Create proof remotely</Button>
+                                    <Button onClick={startProofGeneration}>Create proof remotely</Button>
+                                    <Button className='ml-4' disabled>Create proof locally (WIP)</Button>
                                 </div>
                             </div>
                             <div className="mb-4">
