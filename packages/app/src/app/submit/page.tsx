@@ -10,6 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash } from 'lucide-react';
 import { formSchema } from './form';
 import { createEntry } from './action';
+import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogHeader } from '@/components/ui/dialog';
+import { useState } from 'react';
 
 export default function Submit() {
     const form = useForm<z.infer<typeof formSchema>>({
@@ -31,7 +33,7 @@ export default function Submit() {
                         regex: "",
                         location: "body",
                         revealStates: "[]",
-                        parts: "{}"
+                        parts: "[]"
                     }
                 ]
             }
@@ -40,6 +42,9 @@ export default function Submit() {
     })
 
     const { fields, append, remove } = useFieldArray({control: form.control, name: "parameters.values"})
+    const [modal, setModal] = useState<boolean>(false);
+    const [modalMessage, setModalMessage] = useState<string>("");
+    const [modalError, setModalError] = useState<boolean>(false);
 
     function addValueObject() {
         append({
@@ -105,8 +110,15 @@ export default function Submit() {
 
     
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        const entry = await createEntry(values)
-        console.log(entry)
+        let result = await createEntry(values)
+        if (result.error) {
+            setModalError(true);
+            setModalMessage(result.message.toString() || "Unknown error")
+        } else {
+            setModalError(false);
+            setModalMessage("Entry created successfully")
+        }
+        setModal(true)
     }
 
 
@@ -292,5 +304,19 @@ export default function Submit() {
                     </div>
                 </div>
             </div>
+            <Dialog open={modal} onOpenChange={setModal}>
+                <DialogTrigger></DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogDescription>
+                            {modalMessage}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="text-center">
+                        {modalError && <Button variant="outline" onClick={() => setModal(false)}>Back to Editing</Button>}
+                        {!modalError &&<a href="/"><Button variant="outline">Back to Home</Button></a>}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>)
 }

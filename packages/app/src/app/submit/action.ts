@@ -4,7 +4,6 @@ import { formSchema } from './form';
 import prisma from '@/lib/prisma';
 
 export async function createEntry(values: z.infer<typeof formSchema>) {
-    console.log(JSON.stringify(values, null, 2));
 
     const entry = {
         title: values.title,
@@ -19,6 +18,16 @@ export async function createEntry(values: z.infer<typeof formSchema>) {
         emailQuery: values.emailQuery
     }
 
-    const createdEntry = await prisma.entry.create({data: entry})
-    return createdEntry
+    try {
+        const createdEntry = await prisma.entry.create({data: entry})
+        return {
+            error: false,
+            message: createdEntry
+        }
+    } catch (e: any) {
+        return {
+            error: true,
+            message: "Error creating entry: " + e.toString()
+        }
+    }
 }
