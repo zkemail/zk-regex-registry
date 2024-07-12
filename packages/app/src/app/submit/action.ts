@@ -13,7 +13,7 @@ export async function createEntry(values: z.infer<typeof formSchema>) {
         tags: values.tags,
         parameters: {
             ...values.parameters,
-            version: values.useNewSdk ? "v2" : "v1"
+            version: values.useNewSdk ? "v2" : "v1",
         },
         emailQuery: values.emailQuery
     }

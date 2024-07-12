@@ -5,10 +5,6 @@ import {PageContent, ContentProps} from './content';
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 
-// const ZkRegexProvider = dynamic(() => import("zk-regex-sdk").then((mod) => mod.ZkRegexProvider), {
-//   ssr: false,
-// });
-
 export default dynamic(() => Promise.resolve(TryPage), {ssr: false})
 
 function TryPage(props: ContentProps) {

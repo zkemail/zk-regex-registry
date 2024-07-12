@@ -24,6 +24,7 @@ export const formSchema = z.object({
         shaPrecomputeSelector: z.string(),
         values: z.array(z.object({
             name: z.string(),
+            maxLength: z.number().positive().default(64),
             regex: z.string().optional(),
             prefixRegex: z.string().optional(),
             location: z.string().regex(/(body)|(header)/),
