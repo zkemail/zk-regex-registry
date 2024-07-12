@@ -1,13 +1,21 @@
 import { compileCircuit, generateZKey, generateVKey } from "@/lib/circuit-gen/gen";
 import { getFirstPendingEntry, updateState } from "@/lib/models/entry";
 import { generateCodeLibrary } from "@/lib/code-gen/gen"
+import { Entry } from "@prisma/client";
 
 async function generateCiruitService() {
     while (true) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const entry = await getFirstPendingEntry();
-        if (!entry) {
-            continue
+        let entry: Entry;
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const pendingEntry = await getFirstPendingEntry();
+            if (!pendingEntry) {
+                continue
+            }
+            entry = pendingEntry;
+        } catch (e) {
+            console.error("Failed to poll for entries")
+            continue;
         }
 
         const circuitName = (entry.parameters as any)['name'];
