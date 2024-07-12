@@ -25,8 +25,15 @@ export const formSchema = z.object({
         values: z.array(z.object({
             name: z.string(),
             regex: z.string().optional(),
+            prefixRegex: z.string().optional(),
             location: z.string().regex(/(body)|(header)/),
-            revealStates: z.string().optional(),
+            revealStates: z.string().transform((str, ctx) => {
+                try {
+                    return JSON.parse(str)
+                } catch (e) {
+                    ctx.addIssue( {code: 'custom', message: 'Must look like [[[22,1],[1,1]]]'})
+                }
+            }).optional(),
             parts: z.string().transform( ( str, ctx ) => {
                 try {
                     return JSON.parse( str )

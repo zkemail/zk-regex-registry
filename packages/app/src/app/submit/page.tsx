@@ -31,6 +31,7 @@ export default function Submit() {
                     {
                         name: "",
                         regex: "",
+                        prefixRegex: "",
                         location: "body",
                         revealStates: "[]",
                         parts: "[]"
@@ -50,6 +51,7 @@ export default function Submit() {
         append({
             name: "",
             regex: "",
+            prefixRegex: "",
             location: "body",
             revealStates: "[]",
             parts: "{}"
@@ -77,20 +79,35 @@ export default function Submit() {
                 )}
             />
         } else {
-            return <><FormField
-                control={form.control}
-                name={`parameters.values.${i}.regex`}
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Regex Selector</FormLabel>
-                        <FormControl>
-                            <Input {...field} />
-                        </FormControl>
-                        <FormDescription></FormDescription>
-                        <FormMessage></FormMessage>
-                    </FormItem>
-                )}
-            />
+            return <>
+                <FormField
+                    control={form.control}
+                    name={`parameters.values.${i}.regex`}
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Regex</FormLabel>
+                            <FormControl>
+                                <Input {...field} />
+                            </FormControl>
+                            <FormDescription></FormDescription>
+                            <FormMessage></FormMessage>
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name={`parameters.values.${i}.prefixRegex`}
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Prefix Regex</FormLabel>
+                            <FormControl>
+                                <Input {...field} />
+                            </FormControl>
+                            <FormDescription></FormDescription>
+                            <FormMessage></FormMessage>
+                        </FormItem>
+                    )}
+                />
                 <FormField
                     control={form.control}
                     name={`parameters.values.${i}.revealStates`}
@@ -104,7 +121,8 @@ export default function Submit() {
                             <FormMessage></FormMessage>
                         </FormItem>
                     )}
-                /></>
+                />
+            </>
         }
     }
 
