@@ -24,6 +24,15 @@ export const getAllEntries = async (take: number, skip: number) => {
   return entries
 }
 
+export const textSearchEntries = async(query: string, take: number, skip: number) => {
+    return prisma.entry.findMany({
+        take, skip, orderBy: {createdAt: 'desc'},
+        where: {
+            OR: [{description: { search: query }}, {slug: { search: query }}, {title: { search: query }}]
+        }
+    })
+}
+
 export const getEntryById = async (id: string) => {
     const entry = await prisma.entry.findUnique({where: {id}});
     return entry

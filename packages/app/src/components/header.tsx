@@ -12,6 +12,7 @@ import { Menu, MoveRight, Search, X } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 import { Input } from "./ui/input";
+import { useRouter } from 'next/navigation'
 
 export const Header = () => {
     const navigationItems = [
@@ -21,6 +22,15 @@ export const Header = () => {
             description: "",
         },
     ];
+    const router = useRouter()
+
+    const [query, setQuery] = useState<string>("");
+
+    function onKeyDown(e: React.KeyboardEvent) {
+        if (e.key === "Enter") {
+            router.push("/?query="+query)
+        }
+    }
 
     const [isOpen, setOpen] = useState(false);
     return (
@@ -45,6 +55,9 @@ export const Header = () => {
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                         type="search"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        onKeyDown={onKeyDown}
                         placeholder="Search..."
                         className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
                     />

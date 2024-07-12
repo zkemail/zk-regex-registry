@@ -17,17 +17,21 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
-import { getAllEntries } from "@/lib/models/entry";
+import { getAllEntries, textSearchEntries } from "@/lib/models/entry";
 import prisma from "@/lib/prisma";
 
 const PAGE_LIMIT = 5;
 const DEFAULT_PAGE = 1;
 
-export default async function Home({searchParams: {page}}: {searchParams: {page: string}}) {
+export default async function Home({searchParams: {page, query}}: {searchParams: {page: string, query: string}}) {
   const count = await prisma.entry.count();
   const pageNumber = +page || DEFAULT_PAGE;
-  // TODO: Add pagination
-  let entries = await getAllEntries(PAGE_LIMIT, (pageNumber - 1) * PAGE_LIMIT);
+  let entries;
+  if (!query) {
+      entries = await getAllEntries(PAGE_LIMIT, (pageNumber - 1) * PAGE_LIMIT);
+  } else {
+      entries = await textSearchEntries(query, PAGE_LIMIT, (pageNumber - 1) * PAGE_LIMIT);
+  }
 
   return (
     <div className="w-full py-20 lg:py-40">
