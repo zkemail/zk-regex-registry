@@ -4,8 +4,9 @@ import { generateProof } from "@/lib/proof-gen";
 (async () => {
     console.log("Starting proof generation service");
     while (true) {
+        let jobWithEntry;
         try {
-            let jobWithEntry = await prisma.proofJob.findFirst({
+            jobWithEntry = await prisma.proofJob.findFirst({
                 where: {
                     status: "PENDING"
                 },
@@ -19,6 +20,13 @@ import { generateProof } from "@/lib/proof-gen";
             // Sleep and try again
             if (!jobWithEntry) {
                 await new Promise((resolve) => setTimeout(resolve, 1000));
+                continue;
+            }
+        } catch (e) {
+
+        }
+        try {
+            if (!jobWithEntry) {
                 continue;
             }
             const job = await prisma.proofJob.update({
@@ -45,6 +53,14 @@ import { generateProof } from "@/lib/proof-gen";
             })
         } catch (e) {
             console.error(e)
+            await prisma.proofJob.update({
+                where: {
+                    id: jobWithEntry!.id
+                },
+                data: {
+                    status: "ERROR"
+                }
+            })
         }
     }
 })()
