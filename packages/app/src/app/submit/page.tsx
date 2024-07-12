@@ -61,7 +61,11 @@ export default function Submit() {
             "parameters.shaPrecomputeSelector": ">Not my account<",
             "parameters.values.0.name": "handle",
             "parameters.values.0.location": "body",
-            "parameters.values.0.parts": '[{"is_public":false,"regex_def":"email was meant for @"},{"is_public":true,"regex_def":"(a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z|A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|S|T|U|V|W|X|Y|Z|0|1|2|3|4|5|6|7|8|9|_)+"}]',
+            "parameters.values.0.parts": `[
+  { "is_public": false, "regex_def": "email was meant for @" }, 
+  { "is_public": true, "regex_def": "(a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z|A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|S|T|U|V|W|X|Y|Z|0|1|2|3|4|5|6|7|8|9|_)+" }
+]
+`,
             "parameters.values.0.maxLength": 64,
         }
 
@@ -170,7 +174,7 @@ export default function Submit() {
                 <div className="flex flex-col gap-10">
                     <div className="flex text-left justify-center items-center gap-4 flex-col px-10 md:px-40">
                         <h1 className="text-xl md:text-3xl tracking-tighter text-left font-extrabold">Submit new pattern</h1>
-                        <Button className="mb-6" variant="link" onClick={fillDemo}>Fill form using a sample</Button>
+                        <Button className="mb-6" variant="secondary" size="sm" onClick={fillDemo}>Fill form using a sample</Button>
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full">
                                 <FormField
