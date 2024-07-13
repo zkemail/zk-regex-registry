@@ -55,6 +55,7 @@ Run the database and seed it
 ```bash
 # Using docker compose is the easiest
 docker compose up -d db
+yarn prisma db push
 yarn tsx prisma/seed.ts
 ```
 
