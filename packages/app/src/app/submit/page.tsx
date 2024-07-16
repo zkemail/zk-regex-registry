@@ -12,6 +12,8 @@ import { formSchema } from './form';
 import { createEntry } from './action';
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogHeader } from '@/components/ui/dialog';
 import { useState } from 'react';
+import { FromAddressPattern, SubjectPattern, TimestampPattern, ToAddressPattern } from './patterns';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectLabel, SelectItem } from '@/components/ui/select';
 
 export default function Submit() {
     const form = useForm<z.infer<typeof formSchema>>({
@@ -151,6 +153,30 @@ export default function Submit() {
                     )}
                 />
             </>
+        }
+    }
+
+    function autoFillRegex(index: number, value: string) {
+        let preFilledPattern;
+        switch (value) {
+            case "from":
+                preFilledPattern = FromAddressPattern;
+                break;
+            case "to":
+                preFilledPattern = ToAddressPattern;
+                break
+            case "subject":
+                preFilledPattern = SubjectPattern;
+                break
+            case "timestamp":
+                preFilledPattern = TimestampPattern;
+                break
+            default:
+                break;
+        }
+        if (preFilledPattern) {
+            form.setValue(`parameters.values.${index}.parts`, JSON.stringify(preFilledPattern, null, 2))
+        } else {
         }
     }
 
@@ -332,9 +358,23 @@ export default function Submit() {
                                                 render={({ field }) => (
                                                     <FormItem>
                                                         <FormLabel>Data Location</FormLabel>
-                                                        <FormDescription>Either body or header</FormDescription>
                                                         <FormControl>
-                                                            <Input {...field} />
+                                                            <Select value={field.value} onValueChange={ v => {form.setValue(`parameters.values.${i}.location`, v); autoFillRegex(i, v);}}>
+                                                                <SelectTrigger>
+                                                                    <SelectValue placeholder="body" />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectGroup>
+                                                                        <SelectLabel>Location</SelectLabel>
+                                                                        <SelectItem value="body">Email Body</SelectItem>
+                                                                        <SelectItem value="header">Email Header</SelectItem>
+                                                                        <SelectItem value="from">Sender</SelectItem>
+                                                                        <SelectItem value="to">Recepient</SelectItem>
+                                                                        <SelectItem value="subject">Subject</SelectItem>
+                                                                        <SelectItem value="timestamp">Timestamp</SelectItem>
+                                                                    </SelectGroup>
+                                                                </SelectContent>
+                                                            </Select>
                                                         </FormControl>
                                                         <FormMessage></FormMessage>
                                                     </FormItem>

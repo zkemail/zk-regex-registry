@@ -39,7 +39,7 @@ function mapPrefixRegex(parameters: any): any {
     const mappedValues = parameters.values.map((v:{ parts: {is_public: boolean, regex_def: string}[]}) => {
         let prefixRegex = "";
         for (let part of v.parts) {
-            if (!part.is_public) prefixRegex = part.regex_def;
+            if (!part.is_public) prefixRegex = prefixRegex + part.regex_def;
             else break;
         }
         if (!prefixRegex) throw new Error('Part has to have start with a regex that is_public = false in order to find it later')
@@ -130,7 +130,6 @@ export const generateZkRegexCircuitV2 = (outDir: string, parameters: any): Promi
         }
         // create a json file
         const jsonFile = `${outDir}/${value.name}.json`
-        console.log("json", jsonFile)
         fs.writeFileSync(jsonFile, JSON.stringify({parts: value.parts}))
         const outCircomFile = `${outDir}/${value.name}Regex.circom`;
         const zkSdk = spawn('zk-regex', ['decomposed', '-d', jsonFile, '-c', outCircomFile, '-t', `${value.name}Regex`, '-g',  'true'])
