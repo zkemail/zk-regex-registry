@@ -21,7 +21,7 @@ function ZkRegexProvider({children, clientId, zkRegexRegistryUrl}: ProvidersProp
   const [proofStatus, setProofStatus] = useState<Record<string, ProofStatus>>({});
 
   function createInputWorker(name: string): void {
-      const w = new Worker(`${zkRegexRegistryUrl}/api/script/${name}/circuit_input`)
+      const w = new Worker(`${zkRegexRegistryUrl}/api/script/circuit_input/${name}`)
       setInputWorkers({...inputWorkers, [name]: w});
   }
 

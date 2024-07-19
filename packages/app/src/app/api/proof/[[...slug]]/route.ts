@@ -1,4 +1,4 @@
-import { getEntryById } from "@/lib/models/entry";
+import { getEntryBySlug } from "@/lib/models/entry";
 import { queueProofJob } from "@/lib/proof-gen";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -6,10 +6,10 @@ interface ProofRequest {
     email: string;
 }
 
-export async function POST(request: NextRequest, { params }: { params: { id: string }}) {
+export async function POST(request: NextRequest, { params }: { params: { slug: string[] }}) {
     const circuitInput = await request.json() as ProofRequest;
-
-    const entry = await getEntryById(params.id);
+    const slug = params.slug.join('/');
+    const entry = await getEntryBySlug(slug);
     if (!entry) {
         return NextResponse.json({
             error: 'Entry not found'

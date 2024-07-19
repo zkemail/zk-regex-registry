@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ENV } from "@/lib/env";
 import { compileCircuit, generateVKey, generateZKey } from "@/lib/circuit-gen/gen";
-import { getEntryById, updateState } from "@/lib/models/entry";
+import { getEntryBySlug, updateState } from "@/lib/models/entry";
 
 const STATE: { [key: string]: string } = {
     "PENDING": "Circuit generation in progress",
@@ -12,7 +12,7 @@ const STATE: { [key: string]: string } = {
     "ERROR": "Error occurred",
 };
 
-export async function POST(request: NextRequest, { params }: { params: { id: string }}) {
+export async function POST(request: NextRequest, { params }: { params: { slug: string[] }}) {
 
     const force = request.nextUrl.searchParams.get('force') === 'true' ? true : false;
     // TODO: Refactor this to use a decorator
@@ -24,8 +24,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     //         status: 401
     //     });
     // }
-
-    const entry = await getEntryById(params.id);
+    const slug = params.slug.join('/');
+    const entry = await getEntryBySlug(slug);
     if (!entry) {
         return NextResponse.json({
             error: 'Entry not found'
@@ -43,23 +43,23 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         });
     }
 
-    await updateState(params.id, "PENDING");
+    await updateState(entry.id, "PENDING");
 
     const circuitName =(entry.parameters as any)['name'];
     try {
         const promise = compileCircuit(entry.slug, circuitName, force);
-        updateState(params.id, "COMPILING");
+        updateState(entry.id, "COMPILING");
         promise.then(() => {
-            updateState(params.id, "GENERATING_ZKEY");
+            updateState(entry.id, "GENERATING_ZKEY");
             return generateZKey(entry.slug, circuitName, force);
         }).then(() => {
-            updateState(params.id, "GENERATING_VKEY");
+            updateState(entry.id, "GENERATING_VKEY");
             return generateVKey(entry.slug, circuitName, force);
         }).then(() => {
-            updateState(params.id, "COMPLETED");
+            updateState(entry.id, "COMPLETED");
         }).catch((e) => {
             console.error(`Failed to generate ${e}`);
-            updateState(params.id, "PENDING");
+            updateState(entry.id, "PENDING");
         });
 
         return NextResponse.json({

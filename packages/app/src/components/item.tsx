@@ -52,8 +52,8 @@ export const Item = (props: {entry: Entry}) => {
             <p>Extractable values: {parameters.values.map((v:any) => v.name).join(", ")}</p>
         </div>
         <div className="w-full mt-2">
-            <a href={"/try/"+entry.id}><Button className="mr-2" disabled={entry.status !== "COMPLETED"}>Try it out</Button></a>
-            <a href={"/api/download/"+entry.id}><Button variant="outline" className="mr-2">Download Example Project</Button></a>
+            <a href={"/try/"+entry.slug}><Button className="mr-2" disabled={entry.status !== "COMPLETED"}>Try it out</Button></a>
+            <a href={"/api/download/"+entry.slug}><Button variant="outline" className="mr-2">Download Example Project</Button></a>
             {/* <Button className="mr-2">Download Circuits Only</Button> */}
             <ItemParameterDialog entry={entry}/>
         </div>

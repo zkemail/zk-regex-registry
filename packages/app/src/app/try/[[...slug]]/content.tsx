@@ -67,16 +67,16 @@ export function PageContent(props: ContentProps) {
     }
 
     useEffect(() => {
-        createInputWorker(entry.id);
+        createInputWorker(entry.slug);
         setWorkerReady(true);
-    }, [entry.id])
+    }, [entry.slug])
 
     async function startProofGeneration() {
         for (const message of messages) {
             if (!message.selected || !message.inputs) {
                 continue;
             }
-            const proofRes = await generateProofRemotely(entry.id, message.inputs);
+            const proofRes = await generateProofRemotely(entry.slug, message.inputs);
             console.log("proofRes", proofRes);
         }
     }
@@ -85,7 +85,7 @@ export function PageContent(props: ContentProps) {
         let inputs
         let error, body: string | undefined;
         try {
-            inputs = await generateInputFromEmail(entry.id, email.decodedContents);
+            inputs = await generateInputFromEmail(entry.slug, email.decodedContents);
             body = Buffer.from(inputs.emailBody).toString('utf-8');
             console.log("inputs", inputs)
         } catch (e: any) {
@@ -206,7 +206,7 @@ export function PageContent(props: ContentProps) {
                         let error, body: string | undefined;
                         const parsed = await PostalMime.parse(contents)
                         try {
-                            inputs = await generateInputFromEmail(entry.id, contents);
+                            inputs = await generateInputFromEmail(entry.slug, contents);
                             console.log(inputs);
                             body = Buffer.from(inputs.emailBody).toString('utf-8');
                         } catch (e: any) {

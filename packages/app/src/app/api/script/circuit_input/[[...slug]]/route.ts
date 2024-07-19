@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from 'fs';
 import path from 'path';
-import { getEntryById } from "@/lib/models/entry";
+import { getEntryBySlug } from "@/lib/models/entry";
 
 const OUTPUT_DIR = process.env.GENERATED_OUTPUT_DIR || "./output";
 
-export async function GET(request: NextRequest, { params }: { params: { id: string }}) {
-    const entry = await getEntryById(params.id);
+export async function GET(request: NextRequest, { params }: { params: { slug: string[] }}) {
+    const slug = params.slug.join('/')
+    const entry = await getEntryBySlug(slug);
     if (!entry) {
         return new NextResponse("Entry not found", { status: 404 })
     }
-    // const file = fs.readFileSync(path.join(OUTPUT_DIR, "code", entry?.slug, "generate_inputs_worker_bundled.js"))
-    const file = fs.readFileSync(path.join("./proof_worker_bundled.js"))
+    const file = fs.readFileSync(path.join(OUTPUT_DIR, "code", entry?.slug, "generate_inputs_worker_bundled.js"))
     const content = Buffer.from(file);
 
     return new NextResponse(content, {
