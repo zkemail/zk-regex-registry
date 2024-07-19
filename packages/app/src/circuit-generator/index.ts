@@ -20,7 +20,7 @@ async function generateCiruitService() {
 
         const circuitName = (entry.parameters as any)['name'];
         try {
-            await generateCodeLibrary(entry.parameters, entry.slug)
+            await generateCodeLibrary(entry.parameters, entry.slug, entry.status)
             const promise = compileCircuit(entry.slug, circuitName, true);
             updateState(entry.id, "COMPILING");
             await promise.then(() => {
