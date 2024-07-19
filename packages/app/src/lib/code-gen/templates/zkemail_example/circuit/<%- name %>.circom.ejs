@@ -32,8 +32,8 @@ template <%- name %>(maxHeaderLength, maxBodyLength, n, k, packSize) {
     EV.emailBodyLength <== emailBodyLength;
     <% } %>
 
-    // signal output pubkeyHash;
-    // pubkeyHash <== EV.pubkeyHash;
+    signal output pubkeyHash;
+    pubkeyHash <== EV.pubkeyHash;
 
     // Used for nullifier later
     signal headerHash[256] <== EV.sha;

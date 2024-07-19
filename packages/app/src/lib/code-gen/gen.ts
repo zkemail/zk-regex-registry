@@ -12,26 +12,32 @@ const EXAMPLE_PROJECT_TYPE = 'zkemail_example';
 // Define the directory path
 const templatesDir = './src/lib/code-gen/templates'
 const outputDir = path.join(process.env.GENERATED_OUTPUT_DIR || "./output", 'code')
+const circuitOutputDir = path.join('./output', 'circuit')
 console.log("DIRRR", outputDir);
 const unsafeDirPatterns = ['..', '~'];
 
-export const generateCodeLibrary = async (parameters: any, outputName: string):Promise<string> => {
+export const generateCodeLibrary = async (parameters: any, outputName: string, status: string):Promise<string> => {
     for (const pattern of unsafeDirPatterns) {
         if (outputName.includes(pattern)) {
             throw new Error('Unsafe directory pattern detected');
         }
     }
+    let promises = [];
     if (parameters.version === "v2") {
         const mappedParams = mapPrefixRegex(parameters);
         console.log(JSON.stringify(parameters,null, 2));
         console.log(JSON.stringify(mappedParams,null, 2));
         generateFromTemplate(path.join(templatesDir, EXAMPLE_PROJECT_TYPE), mappedParams, path.join(outputDir, outputName));
-        await generateZkRegexCircuitV2(path.join(outputDir, outputName, "circuit", "regex"), mappedParams);
+        promises.push(generateZkRegexCircuitV2(path.join(outputDir, outputName, "circuit", "regex"), mappedParams));
     } else {
         generateFromTemplate(path.join(templatesDir, EXAMPLE_PROJECT_TYPE), parameters, path.join(outputDir, outputName));
         generateZkRegexCircuit(path.join(outputDir, outputName, "circuit", "regex"), parameters);
     }
-    generateCircuitInputsWorker(path.join(outputDir, outputName), outputName);
+    promises.push(generateCircuitInputsWorker(path.join(outputDir, outputName), outputName));
+    if (status === 'COMPLETED') {
+        promises.push(generateSolidityVerifier(circuitOutputDir, outputDir, outputName, parameters.name));
+    }
+    await Promise.all(promises);
     return await zipDirectory(path.join(outputDir, outputName), path.join(outputDir, `${outputName}-example.zip`))
 }
 
@@ -156,24 +162,58 @@ export const generateZkRegexCircuitV2 = (outDir: string, parameters: any): Promi
     return Promise.all(promises);
 }
 
-export const generateCircuitInputsWorker = (outDir: string, outputName: string):void => {
+export const generateCircuitInputsWorker = (outDir: string, outputName: string):Promise<void> => {
     const inputFile = path.join(outDir, "generate_inputs_worker.js");
     console.log(inputFile);
     const filename = 'generate_inputs_worker_bundled.js';
     // run the bundler in a child process
-    const bundler = spawn('node', ['./src/lib/code-gen/webpack.js', inputFile, outDir, filename]);
-    bundler.stdout.on('data', (data) => {
-        console.log(`stdout: ${data}`);
-    });
-    bundler.stderr.on('data', (data) => {
-        console.error(`stderr: ${data}`);
-    });
-    bundler.on('close', (code) => {
-        // check if file exists
-        if (!fs.existsSync(path.join(outDir, filename))) {
-            console.error('Error bundling worker');
-        }
-        console.log(`child process exited with code ${code}`);
-    });
+    return new Promise((resolve, reject) => {
+        const bundler = spawn('node', ['./src/lib/code-gen/webpack.js', inputFile, outDir, filename]);
+        bundler.stdout.on('data', (data) => {
+            console.log(`stdout: ${data}`);
+        });
+        bundler.stderr.on('data', (data) => {
+            console.error(`stderr: ${data}`);
+        });
+        bundler.on('close', (code) => {
+            // check if file exists
+            if (!fs.existsSync(path.join(outDir, filename))) {
+                console.error('Error bundling worker');
+                return reject(new Error("Output file not found"));
+            }
+            if (code) {
+                console.error(`child process exited with code ${code}`);
+                return reject(new Error(`child process exited with code ${code}`))
+            }
+            resolve()
+        });
 
+    })
+}
+
+export const generateSolidityVerifier = (circuitDir: string, outDir: string, outputName: string, patternName: string): Promise<void> => {
+    const inputFile = path.join(circuitDir, outputName, `${patternName}.zkey`)
+    const outputFile = path.join(outDir, outputName, 'contract', 'src', `verifier.sol`)
+    // run snarkjs in a child process
+    return new Promise((resolve, reject) => {
+        const snarkjs = spawn('snarkjs', ['zkey', 'export', 'solidityverifier', inputFile, outputFile]);
+        snarkjs.stdout.on('data', (data) => {
+            console.log(`stdout: ${data}`);
+        });
+        snarkjs.stderr.on('data', (data) => {
+            console.error(`stderr: ${data}`);
+        });
+        snarkjs.on('close', (code) => {
+            // check if file exists
+            if (!fs.existsSync(outputFile)) {
+                console.error('Error generating solidity verifier');
+                return reject(new Error("Output file not found"));
+            }
+            if (code) {
+                console.error(`child process exited with code ${code}`);
+                return reject(new Error(`child process exited with code ${code}`))
+            }
+            resolve()
+        });
+    })
 }

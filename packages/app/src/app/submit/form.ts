@@ -22,6 +22,7 @@ export const formSchema = z.object({
         name: z.string(),
         ignoreBodyHashCheck: z.boolean(),
         shaPrecomputeSelector: z.string(),
+        senderDomain: z.string(),
         values: z.array(z.object({
             name: z.string(),
             maxLength: z.number().positive().default(64),

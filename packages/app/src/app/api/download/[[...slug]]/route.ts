@@ -13,7 +13,7 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
             status: 404
         })
     }
-    const output = await generateCodeLibrary(entry.parameters, entry.slug);
+    const output = await generateCodeLibrary(entry.parameters, entry.slug, entry.status);
     const stats = statSync(output);
     const fileContent = readFileSync(output)
 

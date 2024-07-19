@@ -29,6 +29,7 @@ export default function Submit() {
                 name: "",
                 ignoreBodyHashCheck: true,
                 shaPrecomputeSelector: "",
+                senderDomain: "",
                 values: [
                     {
                         name: "",
@@ -61,6 +62,7 @@ export default function Submit() {
             "parameters.name": "twitter",
             "parameters.ignoreBodyHashCheck": false,
             "parameters.shaPrecomputeSelector": ">Not my account<",
+            "parameters.senderDomain": "x.com",
             "parameters.values.0.name": "handle",
             "parameters.values.0.location": "body",
             "parameters.values.0.parts": `[
@@ -301,7 +303,20 @@ export default function Submit() {
                                         </FormItem>
                                     )}
                                 />
-
+                                <FormField
+                                    control={form.control}
+                                    name="parameters.senderDomain"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Email sender domain</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="" {...field} />
+                                            </FormControl>
+                                            <FormDescription>This is used for DKIM verification</FormDescription>
+                                            <FormMessage></FormMessage>
+                                        </FormItem>
+                                    )}
+                                />
                                 <FormField
                                     control={form.control}
                                     name="parameters.shaPrecomputeSelector"
