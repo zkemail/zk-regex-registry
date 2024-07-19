@@ -21,8 +21,14 @@ function ZkRegexProvider({children, clientId, zkRegexRegistryUrl}: ProvidersProp
   const [proofStatus, setProofStatus] = useState<Record<string, ProofStatus>>({});
 
   function createInputWorker(name: string): void {
-      const w = new Worker(`${zkRegexRegistryUrl}/api/script/circuit_input/${name}`)
-      setInputWorkers({...inputWorkers, [name]: w});
+      fetch(`${zkRegexRegistryUrl}/api/script/circuit_input/${name}`, {headers: {
+        'Accept': 'text/javascript'
+      }}).then(async r => {
+        const js = await r.text();
+        console.log(js)
+        const w = new Worker(`data:text/javascript;base64,${btoa(js)}`)
+        setInputWorkers({...inputWorkers, [name]: w});
+      })
   }
 
   async function generateInputFromEmail(name: string, email: string) {

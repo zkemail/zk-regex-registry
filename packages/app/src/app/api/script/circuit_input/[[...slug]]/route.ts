@@ -16,7 +16,7 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
 
     return new NextResponse(content, {
         headers: {
-            'Content-Type': 'application/javascript',
+            'Content-Type': 'text/javascript',
             "Content-Length": ''+content.length,
         }
     })
