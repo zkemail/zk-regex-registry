@@ -8,6 +8,7 @@ import { ReactNode, useState } from "react";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 // import React from "react";
 import useZkRegex from './src/hooks/useZkRegex';
+import { encode } from 'js-base64';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -25,8 +26,7 @@ function ZkRegexProvider({children, clientId, zkRegexRegistryUrl}: ProvidersProp
         'Accept': 'text/javascript'
       }}).then(async r => {
         const js = await r.text();
-        console.log(js)
-        const w = new Worker(`data:text/javascript;base64,${btoa(js)}`)
+        const w = new Worker(`data:text/javascript;base64,${encode(js)}`)
         setInputWorkers({...inputWorkers, [name]: w});
       })
   }

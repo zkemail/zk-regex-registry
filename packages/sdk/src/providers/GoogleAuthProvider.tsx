@@ -42,11 +42,11 @@ const GoogleAuthProvider = ({ children }: ProvidersProps) => {
   const [loggedInGmail, setLoggedInGmail] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('googleAuthScopes_1 TEST');
-    console.log('checking googleAuthToken', googleAuthToken);
+    // console.log('googleAuthScopes_1 TEST');
+    // console.log('checking googleAuthToken', googleAuthToken);
 
     if (googleAuthToken) {
-      console.log('googleAuthScopes_2');
+      // console.log('googleAuthScopes_2');
 
       const allScope = hasGrantedAllScopesGoogle(
         googleAuthToken,
@@ -60,11 +60,11 @@ const GoogleAuthProvider = ({ children }: ProvidersProps) => {
   }, [googleAuthToken]);
 
   useEffect(() => {
-    console.log('googleProfile_1');
-    console.log('checking googleAuthToken', googleAuthToken);
+    // console.log('googleProfile_1');
+    // console.log('checking googleAuthToken', googleAuthToken);
 
     if (googleAuthToken) {
-      console.log('googleProfile_2');
+      // console.log('googleProfile_2');
 
       const fetchData = async () => {
         try {
@@ -72,7 +72,7 @@ const GoogleAuthProvider = ({ children }: ProvidersProps) => {
 
           if (email) {
             setLoggedInGmail(email);
-
+            setIsGoogleAuthed(true);
             localStorage.setItem('loggedInEmail', email);
           }
         } catch (error) {

@@ -24,12 +24,12 @@ type RawEmailResponse = {
 type Email = RawEmailResponse & { selected: boolean, inputs?: any, error?: string, body?: string };
 
 export function PageContent(props: ContentProps) {
+    const workers = new Map<string, boolean>();
     const entry = props.entry;
     const {
         googleAuthToken,
         isGoogleAuthed,
         loggedInGmail,
-        scopesApproved,
         googleLogIn,
         googleLogOut,
     } = useGoogleAuth();
@@ -39,19 +39,19 @@ export function PageContent(props: ContentProps) {
         generateInputFromEmail,
         generateProofRemotely,
         proofStatus,
+        inputWorkers,
     } = useZkRegex();
 
     const [messages, setMessages] = useState<Email[]>([]);
-    const [workerReady, setWorkerReady] = useState<boolean>(false);
 
     useEffect(() => {
-        if (!workerReady) {
+        if (!inputWorkers[entry.slug]) {
             return
         }
         filterEmails(entry.emailQuery)
-    }, [googleAuthToken, workerReady])
+    }, [googleAuthToken, inputWorkers])
+
     function filterEmails(query: string) {
-        console.log("fetching emails");
         const fetchData = async () => {
             const res = await fetchEmailList(googleAuthToken.access_token, { q: query })
             const messageIds = res.messages.map((message: any) => message.id)
@@ -67,9 +67,12 @@ export function PageContent(props: ContentProps) {
     }
 
     useEffect(() => {
+        if (workers.get(entry.slug)) {
+            return;
+        }
         createInputWorker(entry.slug);
-        setWorkerReady(true);
-    }, [entry.slug])
+        workers.set(entry.slug, true);
+    }, [])
 
     async function startProofGeneration() {
         for (const message of messages) {
