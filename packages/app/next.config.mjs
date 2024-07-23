@@ -4,7 +4,7 @@ const nextConfig = {
         return [
             {
                 // matching all API routes
-                source: "/api/script/:path*",
+                source: "/api/:path*",
                 headers: [
                     { key: "Access-Control-Allow-Origin", value: "*" },
                     { key: "Access-Control-Allow-Methods", value: "GET,OPTIONS" },
