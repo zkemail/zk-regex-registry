@@ -11,9 +11,32 @@ const CODE_OUT_DIR = "./output/code";
 const CHAIN_ID = process.env.CHAIN_ID || "1";
 
 export async function deployContract(entry: Entry): Promise<void> {
-    const contractOutDir = path.join(CONTRACT_OUT_DIR, entry.slug)
     const contractDir = path.join(CODE_OUT_DIR, entry.slug, 'contract')
     const script = path.join(__dirname, "deploy-contract.sh")
+
+    // spawn process
+    return new Promise((resolve, reject) => {
+        const builder = spawn('bash', [script, contractDir]);
+        builder.stdout.on('data', (data) => {
+            console.log(`stdout: ${data}`);
+        });
+        builder.stderr.on('data', (data) => {
+            console.error(`stderr: ${data}`);
+        });
+        builder.on('close', (code) => {
+            if (code) {
+                console.error(`child process exited with code ${code}`);
+                return reject(new Error(`child process exited with code ${code}`))
+            }
+            resolve()
+        });
+    })
+}
+
+export async function buildContract(entry: Entry): Promise<void> {
+    const contractOutDir = path.join(CONTRACT_OUT_DIR, entry.slug)
+    const contractDir = path.join(CODE_OUT_DIR, entry.slug, 'contract')
+    const script = path.join(__dirname, "build-contract.sh")
 
     // spawn process
     return new Promise((resolve, reject) => {
@@ -38,6 +61,7 @@ export async function deployContract(entry: Entry): Promise<void> {
         });
     })
 }
+
 
 export async function readContractAddresses(entry: Entry): Promise<{verifier: string, contract: string}> {
     const contractDir = path.join(CODE_OUT_DIR, entry.slug, 'contract');
