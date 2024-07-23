@@ -2,9 +2,10 @@ pragma solidity >=0.8.13;
 
 import "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
 import "@zk-email/contracts/utils/StringUtils.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./verifier.sol";
 
-contract Contract {
+contract Contract is Ownable {
     // ============================
     // Dependent Contracts
     // ============================
@@ -24,6 +25,11 @@ contract Contract {
     // Nullifier
     // ============================
     // mapping (string => bool) public nullifiers;    
+
+    constructor (IDKIMRegistry r, Groth16Verifier v) Ownable(msg.sender) {
+        dkimRegistry = r;
+        verifier = v;
+    }
 
     function verify(uint[2] calldata a, uint[2][2] calldata b, uint[2] calldata c, uint[<%-signal_size%>] calldata signals) external {
         // verify RSA

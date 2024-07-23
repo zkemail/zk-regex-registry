@@ -7,8 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "proof-gen": "tsx src/proof-generator/index.ts",
-    "circuit-gen": "tsx src/circuit-generator/index.ts"
+    "proof-gen": "tsx src/workers/proof-generator/index.ts",
+    "circuit-gen": "tsx src/workers/circuit-generator/index.ts",
+    "contract-deploy": "tsx src/workers/contract-deployer.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

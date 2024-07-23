@@ -24,6 +24,8 @@ model Entry {
   parameters  Json
   ProofJob    ProofJob[]
   emailQuery  String @default("")
+  verifierContractAddress String? 
+  contractAddress String? 
 
   @@map("entries")
 }

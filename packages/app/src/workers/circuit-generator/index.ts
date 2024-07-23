@@ -2,6 +2,7 @@ import { compileCircuit, generateZKey, generateVKey } from "@/lib/circuit-gen/ge
 import { getFirstPendingEntry, updateState } from "@/lib/models/entry";
 import { generateCodeLibrary } from "@/lib/code-gen/gen"
 import { Entry } from "@prisma/client";
+import { pubKeyHasher } from "@/lib/contract-deploy";
 
 async function generateCiruitService() {
     while (true) {
@@ -41,5 +42,4 @@ async function generateCiruitService() {
         }
     }
 }
-
 generateCiruitService();
