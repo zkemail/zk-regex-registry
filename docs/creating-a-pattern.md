@@ -37,7 +37,24 @@ Visit the [submit page](https://registry-dev.zkregex.com/submit) to submit it di
 		- **Parts** 
 			- This is where the json needed by the [zk-regex SDK](https://github.com/zkemail/zk-regex) needs to be set
 			- It should look like [this](https://github.com/zkemail/proof-of-twitter/blob/main/packages/circuits/src/twitter-reset.json) 
-	- **V1**
+			- > ```json
+			  >	{
+			  >		"parts": [
+			  >		    {
+				>			"is_public": false,
+				>			"regex_def": "email was meant for @"
+				>		},
+				>		{
+				>			"is_public": true,
+				>			"regex_def": "(a-zA-Z0-9_)+"
+				>		}
+			  >		]
+			  >	}
+			  >	```
+			- We break down the entire regex into parts and then we can use the `is_public` field to determine if we want to extract the part or not
+			- For the twitter example, we want to extract and twitter handle that appears after the `email was meant for @` pattern in the email.
+			- The above regex is set as `is_public = false` since we don't actually want to extract it and only want to use it as a means to find the twitter handle.
+	- **V1 (Deprecated)**
 		- **Regex**
 			- Full regex pattern used to extract the values
 		- **Prefix Regex**

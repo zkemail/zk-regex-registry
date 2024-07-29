@@ -284,7 +284,7 @@ export default function Submit() {
                                             <FormControl>
                                                 <Input placeholder="" {...field} />
                                             </FormControl>
-                                            <FormDescription></FormDescription>
+                                            <FormDescription>e.g CircuitName (without the .circom extension)</FormDescription>
                                             <FormMessage></FormMessage>
                                         </FormItem>
                                     )}
@@ -310,7 +310,7 @@ export default function Submit() {
                                         <FormItem>
                                             <FormLabel>Email sender domain</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="" {...field} />
+                                                <Input placeholder="x.com" {...field} />
                                             </FormControl>
                                             <FormDescription>This is used for DKIM verification</FormDescription>
                                             <FormMessage></FormMessage>
@@ -324,7 +324,7 @@ export default function Submit() {
                                         <FormItem>
                                             <FormLabel>SHA Precompute Selector</FormLabel>
                                             <FormControl>
-                                                <Input disabled={formState.dirtyFields.parameters?.ignoreBodyHashCheck} {...field} />
+                                                <Input disabled={form.getValues("parameters.ignoreBodyHashCheck")} {...field} />
                                             </FormControl>
                                             <FormDescription>A selector that is used to cut-off the email body so that we only compute the hash of the email body after the selector. This is to reduce the number of constraints in the circuit.</FormDescription>
                                             <FormMessage></FormMessage>

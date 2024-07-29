@@ -9,7 +9,7 @@ export default dynamic(() => Promise.resolve(TryPage), {ssr: false})
 
 function TryPage(props: ContentProps) {
   return (
-    <ZkRegexProvider clientId={GOOGLE_CLIENT_ID} zkRegexRegistryUrl=''>
+    <ZkRegexProvider clientId={GOOGLE_CLIENT_ID} zkRegexRegistryUrl='https://registry-dev.zkregex.com'>
         <PageContent {...props}/>
     </ZkRegexProvider>
 
