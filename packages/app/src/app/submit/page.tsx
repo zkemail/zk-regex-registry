@@ -402,7 +402,7 @@ export default function Submit() {
                                                     <FormItem>
                                                         <FormLabel>Max length of extracted data</FormLabel>
                                                         <FormControl>
-                                                            <Input {...field} />
+                                                            <Input type="number" {...field} />
                                                         </FormControl>
                                                         <FormDescription></FormDescription>
                                                         <FormMessage></FormMessage>

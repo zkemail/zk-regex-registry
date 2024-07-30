@@ -1,3 +1,4 @@
+import { getPrefixRegex } from '@/lib/code-gen/utils';
 import { z } from 'zod';
 
 export const formSchema = z.object({
@@ -25,7 +26,7 @@ export const formSchema = z.object({
         senderDomain: z.string(),
         values: z.array(z.object({
             name: z.string(),
-            maxLength: z.number().positive().default(64),
+            maxLength: z.coerce.number().positive().default(64),
             regex: z.string().optional(),
             prefixRegex: z.string().optional(),
             location: z.string().regex(/(body)|(header)/),
@@ -37,10 +38,20 @@ export const formSchema = z.object({
                 }
             }).optional(),
             parts: z.string().transform( ( str, ctx ) => {
+                let parsed;
                 try {
-                    return JSON.parse( str )
+                    parsed = JSON.parse( str )
                 } catch ( e ) {
                     ctx.addIssue( { code: 'custom', message: 'Invalid JSON' } )
+                    return z.NEVER
+                }
+                try {
+                    // try to map and see if it works
+                    getPrefixRegex(parsed)
+                    return parsed
+                }
+                catch (e: any) {
+                    ctx.addIssue( { code: 'custom', message: (e as Error).message } )
                     return z.NEVER
                 }
             }).optional(),

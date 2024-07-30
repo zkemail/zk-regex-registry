@@ -6,6 +6,7 @@ import archiver from 'archiver';
 import { regexToDfa } from './regex';
 import { genCircomAllstr } from './gen_circom';
 import { spawn } from 'child_process';
+import { mapPrefixRegex } from './utils';
 
 const EXAMPLE_PROJECT_TYPE = 'zkemail_example';
 
@@ -41,24 +42,6 @@ export const generateCodeLibrary = async (parameters: any, outputName: string, s
     return await zipDirectory(path.join(outputDir, outputName), path.join(outputDir, `${outputName}-example.zip`))
 }
 
-function mapPrefixRegex(parameters: any): any {
-    const mappedValues = parameters.values.map((v:{ parts: {is_public: boolean, regex_def: string}[]}) => {
-        let prefixRegex = "";
-        for (let part of v.parts) {
-            if (!part.is_public) prefixRegex = prefixRegex + part.regex_def;
-            else break;
-        }
-        if (!prefixRegex) throw new Error('Part has to have start with a regex that is_public = false in order to find it later')
-            return {
-            ...v,
-            prefixRegex
-        }
-    })
-    return {
-        ...parameters,
-        values: mappedValues
-    }
-}
 
 function generateFromTemplate(templateDir: string, parameters: any, outputDir: string) {
     walkDirectory(templateDir, parameters, outputDir);
