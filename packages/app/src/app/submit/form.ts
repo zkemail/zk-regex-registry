@@ -29,7 +29,7 @@ export const formSchema = z.object({
             maxLength: z.coerce.number().positive().default(64),
             regex: z.string().optional(),
             prefixRegex: z.string().optional(),
-            location: z.string().regex(/(body)|(header)|(sender)|(to)|(subject)|(timestamp)/),
+            location: z.string().regex(/(body)|(header)|(from)|(to)|(subject)|(timestamp)/),
             revealStates: z.string().transform((str, ctx) => {
                 try {
                     return JSON.parse(str)
