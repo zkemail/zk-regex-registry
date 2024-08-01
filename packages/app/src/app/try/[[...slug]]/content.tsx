@@ -89,7 +89,7 @@ export function PageContent(props: ContentProps) {
         let error, body: string | undefined;
         try {
             inputs = await generateInputFromEmail(entry.slug, email.decodedContents);
-            body = Buffer.from(inputs.emailBody).toString('utf-8');
+            body = inputs.emailBody ? Buffer.from(inputs.emailBody).toString('utf-8') : undefined;
             console.log("inputs", inputs)
         } catch (e: any) {
             console.error("Error generating circuit inputs: ", e);
@@ -176,8 +176,8 @@ export function PageContent(props: ContentProps) {
                         <TableCell className="font-medium">{proofStatus[id].id}</TableCell>
                         <TableCell>{proofStatus[id].status}</TableCell>
                         <TableCell>{proofStatus[id].estimatedTimeLeft.toFixed(1)}</TableCell>
-                        <TableCell>{JSON.stringify(proofStatus[id].proof || "-- generating --")}</TableCell>
-                        <TableCell>{JSON.stringify(proofStatus[id].publicOutput || "-- generating --")}</TableCell>
+                        <TableCell>{JSON.stringify(proofStatus[id].proof || "generating")}</TableCell>
+                        <TableCell>{JSON.stringify(proofStatus[id].publicOutput || "generating")}</TableCell>
                     </TableRow>
                 ))}
             </TableBody>
@@ -211,7 +211,7 @@ export function PageContent(props: ContentProps) {
                         try {
                             inputs = await generateInputFromEmail(entry.slug, contents);
                             console.log(inputs);
-                            body = Buffer.from(inputs.emailBody).toString('utf-8');
+                            body = inputs.emailBody ? Buffer.from(inputs.emailBody).toString('utf-8') : undefined;
                         } catch (e: any) {
                             error = e.toString();
                         }
