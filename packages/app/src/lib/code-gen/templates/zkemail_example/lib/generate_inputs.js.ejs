@@ -2,21 +2,29 @@ const { generateEmailVerifierInputs } = require("@zk-email/helpers");
 
 export async function generateCircuitInputs(rawEmail) {
     const circuitInputs = await generateEmailVerifierInputs(rawEmail, {
-        ignoreBodyHashCheck: false,
-        maxBodyLength: 4032,
+        ignoreBodyHashCheck: <%- ignoreBodyHashCheck %>,
+        maxBodyLength: <%- ignoreBodyHashCheck ? 0 : 4032 %>,
+        maxHeaderLength: 1024,
         shaPrecomputeSelector: "<%- shaPrecomputeSelector %>",
     });
 
-    const emailBodyString = Buffer.from(circuitInputs.emailBody.map(Number)).toString('ascii');
+    const emailBodyString = circuitInputs.emailBody ? Buffer.from(circuitInputs.emailBody.map(Number)).toString('ascii') : null;
+    const emailHeaderString = circuitInputs.emailHeader ? Buffer.from(circuitInputs.emailHeader.map(Number)).toString('ascii') : null;
     let regexInputs = {};
+    let match;
     <% values.forEach(function(value) { %>
-    const match = emailBodyString.match(new RegExp("<%- value.prefixRegex %>"))
+    <% if (value.location === "body") { %>
+    match = emailBodyString.match(new RegExp(<%- value.prefixRegex %>))
+    <% } else { %>
+    match = emailHeaderString.match(new RegExp(<%- value.prefixRegex %>))
+    <% } %>
     if (match && match.index) {
         regexInputs = {
             ...regexInputs,
             <%- value.name %>RegexIdx: match.index + match[0].length
         }
     }
+    match = null;
     <% }) %>
 
     return {

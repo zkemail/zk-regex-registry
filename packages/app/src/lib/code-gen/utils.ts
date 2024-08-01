@@ -19,5 +19,5 @@ export function getPrefixRegex(parts: { is_public: boolean, regex_def: string }[
         else break;
     }
     if (!prefixRegex) throw new Error('Part has to have start with a regex that is_public = false in order to find it later')
-    return prefixRegex
+    return JSON.stringify(prefixRegex)
 }
