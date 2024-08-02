@@ -9,7 +9,12 @@ import { Check, X } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import PostalMime from 'postal-mime';
-import { parse } from "path";
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useAccount, useSimulateContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { BaseError, getAddress, Hex } from "viem";
+import '@rainbow-me/rainbowkit/styles.css';
+import { circuitOutputToArgs } from "@/lib/contract";
+import { ProofStatus } from "zk-regex-sdk/dist/src/contexts/ZkRegex";
 
 export interface ContentProps {
     entry: Entry
@@ -42,6 +47,8 @@ export function PageContent(props: ContentProps) {
         inputWorkers,
     } = useZkRegex();
 
+    const account = useAccount();
+
     const [messages, setMessages] = useState<Email[]>([]);
 
     useEffect(() => {
@@ -73,6 +80,12 @@ export function PageContent(props: ContentProps) {
         createInputWorker(entry.slug);
         workers.set(entry.slug, true);
     }, [])
+    const { data: hash, error, isPending, writeContract } = useWriteContract();
+
+    const { isLoading: isConfirming, isSuccess: isConfirmed, isError, error: txError } =
+    useWaitForTransactionReceipt({
+      hash,
+    })
 
     async function startProofGeneration() {
         for (const message of messages) {
@@ -147,7 +160,7 @@ export function PageContent(props: ContentProps) {
                                 </TableCell>
                                 <TableCell>{new Date(+message.internalDate).toLocaleString()}</TableCell>
                                 <TableCell>{message.subject}</TableCell>
-                                <TableCell>{message.body?.slice(0, 100)}</TableCell>
+                                <TableCell>{JSON.stringify({...message.inputs, emailBody: message.inputs.emailBody ? "<trimmed>": undefined, emailHeader: "<trimmed>", signature: "<trimmed>"}, null, 2)}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -166,8 +179,6 @@ export function PageContent(props: ContentProps) {
                     <TableHead className="w-[100px]">Job ID</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Estimated Time Left</TableHead>
-                    <TableHead>Proof</TableHead>
-                    <TableHead>Public Output</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -176,8 +187,74 @@ export function PageContent(props: ContentProps) {
                         <TableCell className="font-medium">{proofStatus[id].id}</TableCell>
                         <TableCell>{proofStatus[id].status}</TableCell>
                         <TableCell>{proofStatus[id].estimatedTimeLeft.toFixed(1)}</TableCell>
-                        <TableCell>{JSON.stringify(proofStatus[id].proof || "generating")}</TableCell>
-                        <TableCell>{JSON.stringify(proofStatus[id].publicOutput || "generating")}</TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table> )
+        }
+    }
+
+    function verifyProof(id: string) {
+        writeContract({
+            abi: [ {
+                "inputs": [
+                {
+                    "internalType": "uint256[2]",
+                    "name": "a",
+                    "type": "uint256[2]"
+                },
+                {
+                    "internalType": "uint256[2][2]",
+                    "name": "b",
+                    "type": "uint256[2][2]"
+                },
+                {
+                    "internalType": "uint256[2]",
+                    "name": "c",
+                    "type": "uint256[2]"
+                },
+                {
+                    "internalType": `uint256[${proofStatus[id].publicOutput.length}]`,
+                    "name": "signals",
+                    "type": `uint256[${proofStatus[id].publicOutput.length}]`
+                }
+                ],
+                "name": "verify",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }] as const,
+            address: entry.contractAddress! as Hex,
+            functionName: "verify",
+            args: circuitOutputToArgs({
+                proof: proofStatus[id].proof,
+                public: proofStatus[id].publicOutput,
+            }) as any
+        }, {
+            onError: console.log,
+        }); 
+    }
+    
+    function displayProofJobsToBeVerified() {
+        if (Object.keys(proofStatus).length === 0) {
+            return 
+        } else {
+            return (<Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead className="w-[100px]">Verify</TableHead>
+                    <TableHead className="w-[100px]">Job ID</TableHead>
+                    <TableHead>Proof</TableHead>
+                    <TableHead>Public Output</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {Object.keys(proofStatus).filter(id => proofStatus[id].status === "COMPLETED").map((id) => (
+                    <TableRow key={id}>
+                        <TableCell><Button disabled={isPending || isConfirming}  onClick={() => verifyProof(id)}>Verify</Button></TableCell>
+                        <TableCell className="font-medium">{proofStatus[id].id}</TableCell>
+                        <TableCell>{JSON.stringify(proofStatus[id].proof)}</TableCell>
+                        <TableCell>{JSON.stringify(proofStatus[id].publicOutput)}</TableCell>
                     </TableRow>
                 ))}
             </TableBody>
@@ -271,6 +348,24 @@ export function PageContent(props: ContentProps) {
                                     Step 3: View generated proofs
                                 </h4>
                                 {displayProofJobs()}
+                            </div>
+                            <div className="mb-4">
+                                <h4 className="text-2xl md:text-2xl tracking-tighter max-w-xl text-left font-extrabold mb-4">
+                                    Step 4: Verify proofs on-chain (Sepolia)
+                                </h4>
+                                <p><b className="font-extrabold">Verification Contract:</b> {entry.contractAddress}</p>
+                                <p><b className="font-bold">Groth16 Contract:</b> {entry.verifierContractAddress}</p>
+                                <ConnectButton />
+                                {displayProofJobsToBeVerified()}
+                                {hash && <p>Transaction hash: {hash}</p>}
+                                {isConfirming && <div>Waiting for confirmation...</div>}
+                                {isConfirmed && <div>Transaction is successful.</div>}
+                                {error && (
+                                    <div>Error: {(error as BaseError).shortMessage || error.message}</div>
+                                )}
+                                {txError && (
+                                    <div>Error: {(txError as BaseError).shortMessage || txError.message}</div>
+                                )}
                             </div>
                         </div>
                     </div>

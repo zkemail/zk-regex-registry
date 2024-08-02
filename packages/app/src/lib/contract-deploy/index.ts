@@ -6,6 +6,12 @@ import fs from "fs";
 import { builder } from "./circuit-runner";
 import { verify } from "crypto";
 
+import { bytesToHex, createWalletClient, getAddress, Hex, http, isHex, toBytes, toHex } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+import { sepolia, foundry } from 'viem/chains';
+import { pki } from "node-forge";
+import { toCircomBigIntBytes } from "@zk-email/helpers";
+
 const CONTRACT_OUT_DIR = "./output/contract";
 const CODE_OUT_DIR = "./output/code";
 const CHAIN_ID = process.env.CHAIN_ID || "1";
@@ -84,6 +90,55 @@ export async function readContractAddresses(entry: Entry): Promise<{verifier: st
 
 export async function addDkimEntry(entry: Entry): Promise<void> {
    const domain = (entry.parameters as any).senderDomain as string;
+   const res = await fetch(`https://archive.prove.email/api/key?domain=${domain}`);
+   const body = await res.json();
+   console.log(body);
+
+   if (!body.length) {
+     throw new Error(`No DKIM key found for domain ${domain}`);
+   }
+
+   const pubKeyData = body[0].value.split(";").filter((part:string) => part.includes("p="));
+   const pkiStr = `-----BEGIN PUBLIC KEY-----${pubKeyData[0].split("=")[1]}-----END PUBLIC KEY-----`;
+   const pubkey = pki.publicKeyFromPem(pkiStr);
+   const chunkedKey = toCircomBigIntBytes(BigInt(pubkey.n.toString()));
+   const hashedKey = BigInt(await pubKeyHasher(chunkedKey));
+
+   const privateKey = process.env.PRIVATE_KEY;
+   if (!privateKey) {
+     throw new Error('PRIVATE_KEY not found in environment variables');
+   }
+   const account = privateKeyToAccount(privateKey as Hex);
+   const client = createWalletClient({
+     account,
+     chain: foundry,
+     transport: http()
+   });
+
+   // Prepare contract interaction
+   const dkimContract = process.env.DKIM_REGISTRY;
+   if (!dkimContract) {
+     throw new Error('DKIM_REGISTRY not found in environment variables');
+   }
+   const contractAddress = getAddress(dkimContract as Hex); // Replace 'X' with the actual contract address
+   const abi = [{ 
+     name: 'setDKIMPublicKeyHash', 
+     type: 'function', 
+     inputs: [
+       { name: 'domain', type: 'string' },
+       { name: 'pubkeyHash', type: 'bytes32' }
+     ]
+   }];
+
+   // Send transaction
+   const hash = await client.writeContract({
+     address: contractAddress,
+     abi,
+     functionName: 'setDKIMPublicKeyHash',
+     args: [domain, bytesToHex(toBytes(hashedKey))]
+   });
+
+   console.log(`Transaction sent: ${hash}`);
 }
 
 export async function pubKeyHasher(pubkeyChunks: string[]): Promise<string> {

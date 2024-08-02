@@ -14,4 +14,4 @@ fi
 # install deps and compile contract
 cd $input_dir
 yarn install
-forge script Deploy.s.sol --rpc-url $RPC_URL --broadcast
+forge script Deploy.s.sol --rpc-url $RPC_URL --broadcast --chain-id $CHAIN_ID

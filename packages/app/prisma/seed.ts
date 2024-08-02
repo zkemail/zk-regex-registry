@@ -29,6 +29,7 @@ async function main() {
             parameters: {
                 "name": "twitterProof",
                 "version": "v2",
+                "senderDomain": "x.com",
                 "values": [
                     {
                         "name": "handle",

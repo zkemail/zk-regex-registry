@@ -11,9 +11,7 @@ export function compileCircuit(circuitSlug: string, circuitName: string, force: 
     // Make sure output directory exists, delete if exist
     const circuitDirectory = path.join(CIRCUIT_OUT_DIR, circuitSlug);
     if (fs.existsSync(circuitDirectory)) {
-        if (force) {
-            fs.rmSync(circuitDirectory, { recursive: true })
-        } else {
+        if (!force) {
             console.log("Skipping compilation")
             return Promise.resolve();
         }
