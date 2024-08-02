@@ -21,3 +21,7 @@ export function getPrefixRegex(parts: { is_public: boolean, regex_def: string }[
     if (!prefixRegex) throw new Error('Part has to have start with a regex that is_public = false in order to find it later')
     return JSON.stringify(prefixRegex)
 }
+
+export function calculateSignalLength(values: {maxLength: number}[]) {
+    return values.reduce((acc, value) => acc + Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0), 1);
+}

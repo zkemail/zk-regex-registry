@@ -15,6 +15,8 @@ import { BaseError, getAddress, Hex } from "viem";
 import '@rainbow-me/rainbowkit/styles.css';
 import { circuitOutputToArgs } from "@/lib/contract";
 import { ProofStatus } from "zk-regex-sdk/dist/src/contexts/ZkRegex";
+import { SimpleDialog } from "@/components/simple-dialog";
+import { calculateSignalLength } from "@/lib/code-gen/utils";
 
 export interface ContentProps {
     entry: Entry
@@ -50,6 +52,7 @@ export function PageContent(props: ContentProps) {
     const account = useAccount();
 
     const [messages, setMessages] = useState<Email[]>([]);
+    const [signalLength, setSignalLength] = useState<number>(1);
 
     useEffect(() => {
         if (!inputWorkers[entry.slug]) {
@@ -79,6 +82,7 @@ export function PageContent(props: ContentProps) {
         }
         createInputWorker(entry.slug);
         workers.set(entry.slug, true);
+        setSignalLength(calculateSignalLength((entry?.parameters as any).values as any))
     }, [])
     const { data: hash, error, isPending, writeContract } = useWriteContract();
 
@@ -214,9 +218,9 @@ export function PageContent(props: ContentProps) {
                     "type": "uint256[2]"
                 },
                 {
-                    "internalType": `uint256[${proofStatus[id].publicOutput.length}]`,
+                    "internalType": `uint256[${signalLength}]`,
                     "name": "signals",
-                    "type": `uint256[${proofStatus[id].publicOutput.length}]`
+                    "type": `uint256[${signalLength}]`
                 }
                 ],
                 "name": "verify",
@@ -353,7 +357,43 @@ export function PageContent(props: ContentProps) {
                                 <h4 className="text-2xl md:text-2xl tracking-tighter max-w-xl text-left font-extrabold mb-4">
                                     Step 4: Verify proofs on-chain (Sepolia)
                                 </h4>
-                                <p><b className="font-extrabold">Verification Contract:</b> {entry.contractAddress}</p>
+                                <div className="flex flex-row items-center">
+                                    <p><b className="font-extrabold">Verification Contract:</b> {entry.contractAddress}</p>
+                                    <SimpleDialog title="Verification Contract" trigger={<Button className="font-extrabold" variant="link">View ABI</Button>}>
+                                        <code className="text-xs">
+                                            <pre>
+                                                {JSON.stringify([{
+                                                    "inputs": [
+                                                        {
+                                                            "internalType": "uint256[2]",
+                                                            "name": "a",
+                                                            "type": "uint256[2]"
+                                                        },
+                                                        {
+                                                            "internalType": "uint256[2][2]",
+                                                            "name": "b",
+                                                            "type": "uint256[2][2]"
+                                                        },
+                                                        {
+                                                            "internalType": "uint256[2]",
+                                                            "name": "c",
+                                                            "type": "uint256[2]"
+                                                        },
+                                                        {
+                                                            "internalType": `uint256[${signalLength}]`,
+                                                            "name": "signals",
+                                                            "type": `uint256[${signalLength}]`
+                                                        }
+                                                    ],
+                                                    "name": "verify",
+                                                    "outputs": [],
+                                                    "stateMutability": "nonpayable",
+                                                    "type": "function"
+                                                }], null, 2)}
+                                            </pre>
+                                        </code>
+                                    </SimpleDialog>
+                                </div>
                                 <p><b className="font-bold">Groth16 Contract:</b> {entry.verifierContractAddress}</p>
                                 <ConnectButton />
                                 {displayProofJobsToBeVerified()}
