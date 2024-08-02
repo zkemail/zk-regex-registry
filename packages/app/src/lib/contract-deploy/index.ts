@@ -111,7 +111,7 @@ export async function addDkimEntry(entry: Entry): Promise<void> {
    const account = privateKeyToAccount(privateKey as Hex);
    const client = createWalletClient({
      account,
-     chain: foundry,
+     chain: sepolia,
      transport: http()
    });
 
