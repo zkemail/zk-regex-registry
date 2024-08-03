@@ -18,7 +18,7 @@ export async function generateCircuitInputs(rawEmail) {
     <% } else { %>
     match = emailHeaderString.match(new RegExp(<%- value.prefixRegex %>))
     <% } %>
-    if (match && match.index) {
+    if (match) {
         regexInputs = {
             ...regexInputs,
             <%- value.name %>RegexIdx: match.index + match[0].length
