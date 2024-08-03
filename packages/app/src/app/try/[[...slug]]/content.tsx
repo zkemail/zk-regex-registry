@@ -13,7 +13,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useSimulateContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { BaseError, getAddress, Hex } from "viem";
 import '@rainbow-me/rainbowkit/styles.css';
-import { circuitOutputToArgs } from "@/lib/contract";
+import { circuitOutputToArgs, parseOutput } from "@/lib/contract";
 import { ProofStatus } from "zk-regex-sdk/dist/src/contexts/ZkRegex";
 import { SimpleDialog } from "@/components/simple-dialog";
 import { calculateSignalLength } from "@/lib/code-gen/utils";
@@ -248,8 +248,10 @@ export function PageContent(props: ContentProps) {
                 <TableRow>
                     <TableHead className="w-[100px]">Verify</TableHead>
                     <TableHead className="w-[100px]">Job ID</TableHead>
+                    <TableHead>Proof Output Decoded</TableHead>
                     <TableHead>Proof</TableHead>
                     <TableHead>Public Output</TableHead>
+                    <TableHead>Contract Calldata</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -257,8 +259,10 @@ export function PageContent(props: ContentProps) {
                     <TableRow key={id}>
                         <TableCell><Button disabled={isPending || isConfirming}  onClick={() => verifyProof(id)}>Verify</Button></TableCell>
                         <TableCell className="font-medium">{proofStatus[id].id}</TableCell>
-                        <TableCell>{JSON.stringify(proofStatus[id].proof)}</TableCell>
-                        <TableCell>{JSON.stringify(proofStatus[id].publicOutput)}</TableCell>
+                        <TableCell>{JSON.stringify(parseOutput(entry, proofStatus[id].publicOutput), null, 2)}</TableCell>
+                        <TableCell><SimpleDialog title="Proof" trigger={<Button variant="link">View</Button>}><code><pre>{JSON.stringify(proofStatus[id].proof, null, 2)}</pre></code></SimpleDialog></TableCell>
+                        <TableCell><SimpleDialog title="Public Output" trigger={<Button variant="link">View</Button>}><code><pre>{JSON.stringify(proofStatus[id].publicOutput, null, 2)}</pre></code></SimpleDialog></TableCell>
+                        <TableCell><SimpleDialog title="Contract Calldata" trigger={<Button variant="link">View</Button>}><code><pre>{JSON.stringify(circuitOutputToArgs({ proof: proofStatus[id].proof, public: proofStatus[id].publicOutput }), null, 2)}</pre></code></SimpleDialog></TableCell>
                     </TableRow>
                 ))}
             </TableBody>
