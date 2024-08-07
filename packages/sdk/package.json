@@ -1,6 +1,6 @@
 {
-  "name": "zk-regex-sdk",
-  "version": "1.0.0",
+  "name": "@zk-email/zk-regex-sdk",
+  "version": "1.0.2",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "MIT",
