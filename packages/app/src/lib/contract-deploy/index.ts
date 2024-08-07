@@ -90,6 +90,7 @@ export async function readContractAddresses(entry: Entry): Promise<{verifier: st
 
 export async function addDkimEntry(entry: Entry): Promise<void> {
    const domain = (entry.parameters as any).senderDomain as string;
+   const selector = (entry.parameters as any).dkimSelector as string;
    const res = await fetch(`https://archive.prove.email/api/key?domain=${domain}`);
    const body = await res.json();
    console.log(body);
@@ -98,7 +99,13 @@ export async function addDkimEntry(entry: Entry): Promise<void> {
      throw new Error(`No DKIM key found for domain ${domain}`);
    }
 
-   const pubKeyData = body[0].value.split(";").filter((part:string) => part.includes("p="));
+   let key: {selector: string, value: string};
+   if (selector) {
+    key = body.find((b: {selector: string}) => b.selector === selector);
+   } else {
+    key = body[0];
+   }
+   const pubKeyData = key.value.split(";").filter((part:string) => part.includes("p="));
    const pkiStr = `-----BEGIN PUBLIC KEY-----${pubKeyData[0].split("=")[1]}-----END PUBLIC KEY-----`;
    const pubkey = pki.publicKeyFromPem(pkiStr);
    const chunkedKey = toCircomBigIntBytes(BigInt(pubkey.n.toString()));

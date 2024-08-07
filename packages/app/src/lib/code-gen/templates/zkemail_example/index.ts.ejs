@@ -13,6 +13,9 @@ try {
             console.error("raw email is missing, update index.ts to paste the entire email (header + body)")
             process.exit(1);
         }
+        const inputs = await generateCircuitInputs(rawEmail)
+        console.log(inputs);
+
         const cir = await wasm_tester(
             path.join(__dirname, "./circuit/<%- name %>.circom"),
             {
@@ -23,7 +26,6 @@ try {
             }
         );
 
-        const inputs = await generateCircuitInputs(rawEmail)
         const witness = await cir.calculateWitness(
             inputs,
             true

@@ -3,7 +3,7 @@ const { generateEmailVerifierInputs } = require("@zk-email/helpers");
 export async function generateCircuitInputs(rawEmail) {
     const circuitInputs = await generateEmailVerifierInputs(rawEmail, {
         ignoreBodyHashCheck: <%- ignoreBodyHashCheck %>,
-        maxBodyLength: <%- ignoreBodyHashCheck ? 0 : 4032 %>,
+        maxBodyLength: <%- ignoreBodyHashCheck ? 0 : (emailBodyMaxLength || 4032) %>,
         maxHeaderLength: 1024,
         shaPrecomputeSelector: "<%- shaPrecomputeSelector %>",
     });

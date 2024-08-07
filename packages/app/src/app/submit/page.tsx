@@ -29,7 +29,9 @@ export default function Submit() {
                 name: "",
                 ignoreBodyHashCheck: true,
                 shaPrecomputeSelector: "",
+                emailBodyMaxLength: 4032,
                 senderDomain: "",
+                dkimSelector: "",
                 values: [
                     {
                         name: "",
@@ -63,6 +65,8 @@ export default function Submit() {
             "parameters.ignoreBodyHashCheck": false,
             "parameters.shaPrecomputeSelector": ">Not my account<",
             "parameters.senderDomain": "x.com",
+            "parameters.emailBodyMaxLength": 4032,
+            "parameters.dkimSelector": "dkim-202308",
             "parameters.values.0.name": "handle",
             "parameters.values.0.location": "body",
             "parameters.values.0.parts": `[
@@ -319,6 +323,20 @@ export default function Submit() {
                                 />
                                 <FormField
                                     control={form.control}
+                                    name="parameters.dkimSelector"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>DKIM selector</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="dkim" {...field} />
+                                            </FormControl>
+                                            <FormDescription>(Optional) DKIM selector that is found in the email header</FormDescription>
+                                            <FormMessage></FormMessage>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
                                     name="parameters.shaPrecomputeSelector"
                                     render={({ field, formState }) => (
                                         <FormItem>
@@ -327,6 +345,20 @@ export default function Submit() {
                                                 <Input disabled={form.getValues("parameters.ignoreBodyHashCheck")} {...field} />
                                             </FormControl>
                                             <FormDescription>A selector that is used to cut-off the email body so that we only compute the hash of the email body after the selector. This is to reduce the number of constraints in the circuit.</FormDescription>
+                                            <FormMessage></FormMessage>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="parameters.emailBodyMaxLength"
+                                    render={({ field, formState }) => (
+                                        <FormItem>
+                                            <FormLabel>Max Email Body Length</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" disabled={form.getValues("parameters.ignoreBodyHashCheck")} {...field} />
+                                            </FormControl>
+                                            <FormDescription>Must be a multiple of 64</FormDescription>
                                             <FormMessage></FormMessage>
                                         </FormItem>
                                     )}

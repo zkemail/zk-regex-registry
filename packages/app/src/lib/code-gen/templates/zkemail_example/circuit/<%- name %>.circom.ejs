@@ -60,4 +60,4 @@ template <%- name %>(maxHeaderLength, maxBodyLength, n, k, packSize) {
 <% }); %>
 }
 
-component main = <%- name %>(1024, <%- ignoreBodyHashCheck ? 0 : 4032 %>, 121, 17, 7);
+component main = <%- name %>(1024, <%- ignoreBodyHashCheck ? 0 : (emailBodyMaxLength || 4032) %>, 121, 17, 7);

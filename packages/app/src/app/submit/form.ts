@@ -24,6 +24,13 @@ export const formSchema = z.object({
         ignoreBodyHashCheck: z.boolean(),
         shaPrecomputeSelector: z.string(),
         senderDomain: z.string(),
+        dkimSelector: z.string().optional(),
+        emailBodyMaxLength: z.coerce.number().transform((n, ctx) => {
+            if (n % 64 !== 0) {
+                ctx.addIssue({code: 'custom', message: 'Must be a multiple of 64'})
+            }
+            return n;
+        }),
         values: z.array(z.object({
             name: z.string(),
             maxLength: z.coerce.number().positive().default(64),
