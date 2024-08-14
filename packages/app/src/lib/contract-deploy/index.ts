@@ -8,7 +8,7 @@ import { verify } from "crypto";
 
 import { bytesToHex, createWalletClient, getAddress, Hex, http, isHex, toBytes, toHex } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { sepolia, foundry } from 'viem/chains';
+import { sepolia, foundry, optimismSepolia } from 'viem/chains';
 import { pki } from "node-forge";
 import { toCircomBigIntBytes } from "@zk-email/helpers";
 
@@ -93,7 +93,7 @@ export async function addDkimEntry(entry: Entry): Promise<void> {
    const selector = (entry.parameters as any).dkimSelector as string;
    const res = await fetch(`https://archive.prove.email/api/key?domain=${domain}`);
    const body = await res.json();
-   console.log(body);
+//    console.log(body);
 
    if (!body.length) {
      throw new Error(`No DKIM key found for domain ${domain}`);

@@ -1,9 +1,9 @@
-const { generateEmailVerifierInputs } = require("@zk-email/helpers");
+const { generateEmailVerifierInputs, packBytesIntoNBytes } = require("@zk-email/helpers");
 
-export async function generateCircuitInputs(rawEmail) {
+export async function generateCircuitInputs(rawEmail, inputs) {
     const circuitInputs = await generateEmailVerifierInputs(rawEmail, {
         ignoreBodyHashCheck: <%- ignoreBodyHashCheck %>,
-        maxBodyLength: <%- ignoreBodyHashCheck ? 0 : (emailBodyMaxLength || 4032) %>,
+        maxBodyLength: <%- ignoreBodyHashCheck ? 0 : emailBodyMaxLength %>,
         maxHeaderLength: 1024,
         shaPrecomputeSelector: "<%- shaPrecomputeSelector %>",
     });
@@ -27,8 +27,25 @@ export async function generateCircuitInputs(rawEmail) {
     match = null;
     <% }) %>
 
+    const packedInputs = {};
+
+    <% externalInputs.forEach(function(input) { %>
+    {
+        const key = "<%- input.name %>";
+        const length = <%- Math.floor(input.maxLength / 31) + (input.maxLength % 31 ? 1 : 0) %>;
+        packedInputs[key] = packBytesIntoNBytes(inputs[key] || "", 31).map(s => s.toString());
+        while (packedInputs[key].length < length) {
+            packedInputs[key].push("0");
+        }
+        if (packedInputs[key].length > length) {
+            throw new Error(`Invalid input length for ${key} needs to be less than <%- input.maxLength %>`)
+        }
+    }
+    <% }); %>
+
     return {
         ...circuitInputs,
         ...regexInputs,
+        ...packedInputs
     }
 }

@@ -62,6 +62,10 @@ export const formSchema = z.object({
                     return z.NEVER
                 }
             }).optional(),
+        })),
+        externalInputs: z.array(z.object({
+            name: z.string(),
+            maxLength: z.coerce.number().positive().default(64),
         }))
     }),
 })

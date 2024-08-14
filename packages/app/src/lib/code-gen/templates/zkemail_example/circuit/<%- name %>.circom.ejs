@@ -17,6 +17,10 @@ template <%- name %>(maxHeaderLength, maxBodyLength, n, k, packSize) {
     signal input pubkey[k]; // rsa pubkey, verified with smart contract + DNSSEC proof. split up into k parts of n bits each.
     signal input signature[k]; // rsa signature. split up into k parts of n bits each.
 
+    <% externalInputs.forEach(function(input) { %>
+    signal input <%- input.name %>[<%- Math.floor(input.maxLength / 31) + (input.maxLength % 31 ? 1 : 0) %>];
+    <% }) %>
+
 
     // DKIM Verification
     component EV = EmailVerifier(maxHeaderLength, maxBodyLength, n, k, <%- ignoreBodyHashCheck ? 1 : 0 %>);
@@ -58,6 +62,11 @@ template <%- name %>(maxHeaderLength, maxBodyLength, n, k, packSize) {
     signal output <%- value.name %>PackedOut[computeIntChunkLength(<%- value.name %>MaxLength)];
     <%- value.name %>PackedOut <== PackRegexReveal(<%- (value.location === 'body') ? 'maxBodyLength' : 'maxHeaderLength' %>, <%- value.name %>MaxLength)(<%- value.name %>RegexReveal, <%- value.name %>RegexIdx);
 <% }); %>
+
 }
 
-component main = <%- name %>(1024, <%- ignoreBodyHashCheck ? 0 : (emailBodyMaxLength || 4032) %>, 121, 17, 7);
+<% if (externalInputs.length > 0) {let public_args = externalInputs.map( i => i.name).join(", "); %>
+component main { public [<%- public_args %>]} = <%- name %>(1024, <%- ignoreBodyHashCheck ? 0 : emailBodyMaxLength %>, 121, 17, 7);
+<% } else { %>
+component main = <%- name %>(1024, <%- ignoreBodyHashCheck ? 0 : emailBodyMaxLength %>, 121, 17, 7);
+<% } %>

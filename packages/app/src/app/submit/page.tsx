@@ -42,13 +42,15 @@ export default function Submit() {
                         revealStates: "[]",
                         parts: "[]"
                     }
-                ]
+                ],
+                externalInputs: []
             }
 
         },
     })
 
     const { fields, append, remove } = useFieldArray({control: form.control, name: "parameters.values"})
+    const { fields: externalInputs, append: appendInput, remove: removeInput } = useFieldArray({control: form.control, name: "parameters.externalInputs"})
     const [modal, setModal] = useState<boolean>(false);
     const [modalMessage, setModalMessage] = useState<string>("");
     const [modalError, setModalError] = useState<boolean>(false);
@@ -75,6 +77,8 @@ export default function Submit() {
 ]
 `,
             "parameters.values.0.maxLength": 64,
+            "parameters.externalInputs.0.name": "address",
+            "parameters.externalInputs.0.maxLength": 64,
         }
 
         for (let v of Object.keys(sampleForm)) {
@@ -96,6 +100,17 @@ export default function Submit() {
 
     function removeValueObject(i: number) {
         remove(i)
+    }
+
+    function addExternalInputObject() {
+        appendInput({
+            name: "",
+            maxLength: 64
+        })
+    }
+
+    function removeExternalInputObject(i: number) {
+        removeInput(i)
     }
 
     function displayValueForm(i: number) {
@@ -406,7 +421,7 @@ export default function Submit() {
                                                     <FormItem>
                                                         <FormLabel>Data Location</FormLabel>
                                                         <FormControl>
-                                                            <Select value={field.value} onValueChange={ v => {form.setValue(`parameters.values.${i}.location`, v); autoFillRegex(i, v);}}>
+                                                            <Select value={field.value} onValueChange={ v => {form.setValue(`parameters.values.${i}.location`, v); autoFillRegex(i, v); }}>
                                                                 <SelectTrigger>
                                                                     <SelectValue placeholder="body" />
                                                                 </SelectTrigger>
@@ -445,7 +460,44 @@ export default function Submit() {
                                         </div>
                                     )
                                 })}
-
+                                <div className="flex flex-row items-center">
+                                    <b>External Inputs</b>
+                                    <Button type="button" onClick={() => addExternalInputObject()} variant="outline" className="ml-4"><Plus color="green"/>Add new value to extract</Button>
+                                </div>
+                                {externalInputs.map((v, i) => {
+                                    return (
+                                        <div className='pl-8 pb-4' key={v.id}>
+                                            <div className="flex flex-row items-center"><b>Field #{i + 1}</b>{i !== 0 && <Trash color="red" className="ml-2" onClick={() => removeExternalInputObject(i)}/>}</div>
+                                            <FormField
+                                                control={form.control}
+                                                name={`parameters.externalInputs.${i}.name`}
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Field Name</FormLabel>
+                                                        <FormControl>
+                                                            <Input {...field} />
+                                                        </FormControl>
+                                                        <FormDescription></FormDescription>
+                                                        <FormMessage></FormMessage>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name={`parameters.externalInputs.${i}.maxLength`}
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Max length of input</FormLabel>
+                                                        <FormControl>
+                                                            <Input type="number" {...field} />
+                                                        </FormControl>
+                                                        <FormDescription></FormDescription>
+                                                        <FormMessage></FormMessage>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+                                    )})}
                                 <Button type="submit">Submit</Button>
                             </form>
                         </Form>

@@ -53,6 +53,7 @@ export function PageContent(props: ContentProps) {
 
     const [messages, setMessages] = useState<Email[]>([]);
     const [signalLength, setSignalLength] = useState<number>(1);
+    const [externalInputs, setExternalInputs] = useState<Record<string,string>>({});
 
     useEffect(() => {
         if (!inputWorkers[entry.slug]) {
@@ -83,6 +84,13 @@ export function PageContent(props: ContentProps) {
         createInputWorker(entry.slug);
         workers.set(entry.slug, true);
         setSignalLength(calculateSignalLength((entry?.parameters as any).values as any))
+        const entryExternalInputs = (entry.parameters as any).externalInputs as {name: string, maxLength: number}[]
+        for (const input of entryExternalInputs) {
+            setExternalInputs({
+                ...externalInputs,
+                [input.name]: "",
+            });
+        }
     }, [])
     const { data: hash, error, isPending, writeContract } = useWriteContract();
 
@@ -105,7 +113,7 @@ export function PageContent(props: ContentProps) {
         let inputs
         let error, body: string | undefined;
         try {
-            inputs = await generateInputFromEmail(entry.slug, email.decodedContents);
+            inputs = await generateInputFromEmail(entry.slug, email.decodedContents, externalInputs);
             body = inputs.emailBody ? Buffer.from(inputs.emailBody).toString('utf-8') : undefined;
             console.log("inputs", inputs)
         } catch (e: any) {
@@ -128,6 +136,22 @@ export function PageContent(props: ContentProps) {
             )
         } else {
             return <Button onClick={googleLogIn}>Login with Google</Button>
+        }
+    }
+
+    function displayExternalInputForm() {
+        if (Object.keys(externalInputs).length === 0) {
+            return <></>
+        } else {
+            return (<>
+            <p className="mb-4">This pattern requires you to also submit an external input to the circuit.</p>
+            {Object.keys(externalInputs).map(name => {
+                return (<div key={name}><b className="mb-2">Address</b><Input placeholder={name} onChange={(e) => {setExternalInputs({
+                    ...externalInputs,
+                    [name]: e.target.value,
+                })}}></Input></div>)
+            })}
+            </>)
         }
     }
 
@@ -164,7 +188,7 @@ export function PageContent(props: ContentProps) {
                                 </TableCell>
                                 <TableCell>{new Date(+message.internalDate).toLocaleString()}</TableCell>
                                 <TableCell>{message.subject}</TableCell>
-                                <TableCell>{JSON.stringify({...message.inputs, emailBody: message.inputs.emailBody ? "<trimmed>": undefined, emailHeader: "<trimmed>", signature: "<trimmed>"}, null, 2)}</TableCell>
+                                <TableCell>{JSON.stringify({...message.inputs, emailBody: message.inputs?.emailBody ? "<trimmed>": undefined, emailHeader: "<trimmed>", signature: "<trimmed>"}, null, 2)}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -280,22 +304,18 @@ export function PageContent(props: ContentProps) {
     }
 
     function uploadEmail(e: FormEvent<HTMLInputElement>) {
-        console.log("uploading")
         if (e.currentTarget.files) {
             for (let i = 0; i < e.currentTarget.files.length; i++) {
                 const file = e.currentTarget.files[i];
-                console.log(file);
                 const reader = new FileReader();
                 reader.onload = async (e) => {
                     const contents = e.target?.result;
-                    console.log(contents);
                     if (typeof contents === "string") {
                         let inputs: any;
                         let error, body: string | undefined;
                         const parsed = await PostalMime.parse(contents)
                         try {
-                            inputs = await generateInputFromEmail(entry.slug, contents);
-                            console.log(inputs);
+                            inputs = await generateInputFromEmail(entry.slug, contents, externalInputs);
                             body = inputs.emailBody ? Buffer.from(inputs.emailBody).toString('utf-8') : undefined;
                         } catch (e: any) {
                             error = e.toString();
@@ -330,7 +350,8 @@ export function PageContent(props: ContentProps) {
                                 <h4 className="text-xl md:text-2xl tracking-tighter text-left font-extrabold mb-4 mt-4">
                                     Step 1: Provide an email sample
                                 </h4>
-                                <p className="mb-4">You can either connect your gmail or upload a .eml file. Your google API key is kept locally and never sent out to any of our servers.</p>
+                                {displayExternalInputForm()}
+                                <p className="mb-4 mt-4">You can either connect your gmail or upload a .eml file. Your google API key is kept locally and never sent out to any of our servers.</p>
                                 {loggedInGmail && <p className="mb-2"><b>Logged in as: {loggedInGmail}</b></p>}
                                 <div className="flex flex-row">
                                     {displayGoogleLoginButton(isGoogleAuthed)}
@@ -338,6 +359,7 @@ export function PageContent(props: ContentProps) {
                                         <Input className='ml-4' type="file" onChange={e => uploadEmail(e)} />
                                     </div>
                                 </div>
+
                             </div>
                             <div className="mb-4">
                                 <h4 className="text-xl md:text-2xl tracking-tighter text-left font-extrabold mb-4">

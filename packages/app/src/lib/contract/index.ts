@@ -69,5 +69,15 @@ export const parseOutput = (entry: Entry, output: string[]) => {
       [value.name]: unpackedValue
     }
   }
+  for (const value of (entry.parameters as any).externalInputs) {
+    const packLength = Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0);
+    const data = output.slice(i, i+packLength);
+    const unpackedValue = packedNBytesToString(data.map(BigInt)).replaceAll('\u0000', '');
+    i += packLength;
+    result = {
+      ...result,
+      [value.name]: unpackedValue
+    }
+  }
   return result;
 }

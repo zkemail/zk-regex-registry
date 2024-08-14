@@ -17,6 +17,16 @@ const circuitOutputDir = path.join('./output', 'circuit')
 console.log("DIRRR", outputDir);
 const unsafeDirPatterns = ['..', '~'];
 
+export function fillDefaultParameters(parameters: any) {
+    if (parameters.emailBodyMaxLength === undefined) {
+        parameters.emailBodyMaxLength = 4032
+    }
+    if (parameters.externalInputs === undefined) {
+        parameters.externalInputs = []
+    } 
+    return parameters;
+}
+
 export const generateCodeLibrary = async (parameters: any, outputName: string, status: string):Promise<string> => {
     for (const pattern of unsafeDirPatterns) {
         if (outputName.includes(pattern)) {
@@ -24,6 +34,7 @@ export const generateCodeLibrary = async (parameters: any, outputName: string, s
         }
     }
     let promises = [];
+    parameters = fillDefaultParameters(parameters);
     if (parameters.version === "v2") {
         const mappedParams = mapPrefixRegex(parameters);
         console.log(JSON.stringify(parameters,null, 2));

@@ -31,7 +31,7 @@ function ZkRegexProvider({children, clientId, zkRegexRegistryUrl}: ProvidersProp
       })
   }
 
-  async function generateInputFromEmail(name: string, email: string) {
+  async function generateInputFromEmail(name: string, email: string, externalInputs: Record<string, string>) {
       const worker = inputWorkers[name];
       return new Promise((resolve, reject) => {
         worker.onmessage = (event: any) => {
@@ -41,7 +41,11 @@ function ZkRegexProvider({children, clientId, zkRegexRegistryUrl}: ProvidersProp
             resolve(event.data);
           }
         }
-        worker.postMessage(email);
+
+        worker.postMessage({
+          rawEmail: email,
+          inputs: externalInputs
+        });
       });
   }
 

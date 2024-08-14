@@ -23,7 +23,7 @@ interface ZkRegexValues {
     }
     createInputWorker: (name: string) => void;
     deleteInputWorker: (name: string) => void;
-    generateInputFromEmail: (name: string, email: string) => Promise<any>;
+    generateInputFromEmail: (name: string, email: string, externalInputs: Record<string,string>) => Promise<any>;
 
     customProofGenWorkerSrc: {
         [key: string]: string
