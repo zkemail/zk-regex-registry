@@ -48,7 +48,7 @@
     "vm-browserify": "^1.1.2",
     "wagmi": "^2.12.1",
     "webpack": "^5.92.1",
-    "zk-regex-sdk": "link:../sdk",
+    "@zk-email/zk-regex-sdk": "^1.0.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {

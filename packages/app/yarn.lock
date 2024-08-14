@@ -2475,6 +2475,14 @@
     commander "^11.0.0"
     snarkjs "^0.7.0"
 
+"@zk-email/zk-regex-sdk@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@zk-email/zk-regex-sdk/-/zk-regex-sdk-1.0.3.tgz#49f89ec658a2eeb9de9a7bc2e31bd2f9b2d3df7b"
+  integrity sha512-cK0Kx/417BcfAVcimROZQytqLd5wYT0+Khpw6GSgBKn3rj1XsXOxT0kcR0pxr4hgn8Bkh8ualI38uQxJ47rQvA==
+  dependencies:
+    "@react-oauth/google" "^0.12.1"
+    js-base64 "^3.7.7"
+
 abitype@1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/abitype/-/abitype-1.0.5.tgz#29d0daa3eea867ca90f7e4123144c1d1270774b6"
@@ -6857,8 +6865,14 @@ string_decoder@~1.1.1:
   dependencies:
     safe-buffer "~5.1.0"
 
-"strip-ansi-cjs@npm:strip-ansi@^6.0.1", strip-ansi@^6.0.0, strip-ansi@^6.0.1:
-  name strip-ansi-cjs
+"strip-ansi-cjs@npm:strip-ansi@^6.0.1":
+  version "6.0.1"
+  resolved "https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz"
+  integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==
+  dependencies:
+    ansi-regex "^5.0.1"
+
+strip-ansi@^6.0.0, strip-ansi@^6.0.1:
   version "6.0.1"
   resolved "https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz"
   integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==
@@ -7683,10 +7697,6 @@ zip-stream@^6.0.1:
     archiver-utils "^5.0.0"
     compress-commons "^6.0.2"
     readable-stream "^4.0.0"
-
-"zk-regex-sdk@link:../sdk":
-  version "0.0.0"
-  uid ""
 
 zod@^3.23.8:
   version "3.23.8"

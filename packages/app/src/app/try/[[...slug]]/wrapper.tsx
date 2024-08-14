@@ -1,6 +1,6 @@
 'use client'
 import dynamic from 'next/dynamic'
-import { ZkRegexProvider } from 'zk-regex-sdk';
+import { ZkRegexProvider } from '@zk-email/zk-regex-sdk';
 import { PageContent, ContentProps } from './content';
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'

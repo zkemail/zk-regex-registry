@@ -4,7 +4,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Entry } from "@prisma/client";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { useState, useEffect, FormEvent } from "react";
-import { useGoogleAuth, fetchEmailList, fetchEmailsRaw, fetchProfile, useZkRegex } from "zk-regex-sdk";
+import { useGoogleAuth, fetchEmailList, fetchEmailsRaw, fetchProfile, useZkRegex } from "@zk-email/zk-regex-sdk";
 import { Check, X } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -14,7 +14,7 @@ import { useAccount, useSimulateContract, useWaitForTransactionReceipt, useWrite
 import { BaseError, getAddress, Hex } from "viem";
 import '@rainbow-me/rainbowkit/styles.css';
 import { circuitOutputToArgs, parseOutput } from "@/lib/contract";
-import { ProofStatus } from "zk-regex-sdk/dist/src/contexts/ZkRegex";
+import { ProofStatus } from "@zk-email/zk-regex-sdk/dist/src/contexts/ZkRegex";
 import { SimpleDialog } from "@/components/simple-dialog";
 import { calculateSignalLength } from "@/lib/code-gen/utils";
 
