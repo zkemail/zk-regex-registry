@@ -84,7 +84,7 @@ export function PageContent(props: ContentProps) {
         createInputWorker(entry.slug);
         workers.set(entry.slug, true);
         setSignalLength(calculateSignalLength((entry?.parameters as any).values as any))
-        const entryExternalInputs = (entry.parameters as any).externalInputs as {name: string, maxLength: number}[]
+        const entryExternalInputs = (entry.parameters as any).externalInputs as {name: string, maxLength: number}[] || [];
         for (const input of entryExternalInputs) {
             setExternalInputs({
                 ...externalInputs,
