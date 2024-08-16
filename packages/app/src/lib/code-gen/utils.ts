@@ -22,6 +22,8 @@ export function getPrefixRegex(parts: { is_public: boolean, regex_def: string }[
     return JSON.stringify(prefixRegex)
 }
 
-export function calculateSignalLength(values: {maxLength: number}[]) {
-    return values.reduce((acc, value) => acc + Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0), 1);
+export function calculateSignalLength(values: {maxLength: number}[], externalInputs: {maxLength: number}[] = []) {
+    const valuesLength = values.reduce((acc, value) => acc + Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0), 1);
+    const inputsLength = externalInputs.reduce((acc, value) => acc + Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0), 0);
+    return valuesLength + inputsLength;
 }
