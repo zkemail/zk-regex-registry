@@ -1,6 +1,6 @@
 'use client'
 import dynamic from 'next/dynamic'
-import { ZkRegexProvider } from '@zk-email/zk-regex-sdk';
+import { ZkEmailSDKProvider } from '@zk-email/zk-email-sdk';
 import { PageContent, ContentProps } from './content';
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -14,7 +14,7 @@ export default dynamic(() => Promise.resolve(TryPage), { ssr: false })
 
 function TryPage(props: ContentProps) {
   return (
-    <ZkRegexProvider clientId={GOOGLE_CLIENT_ID} zkRegexRegistryUrl=''>
+    <ZkEmailSDKProvider clientId={GOOGLE_CLIENT_ID} zkEmailSDKRegistryUrl=''>
       <WagmiProvider config={config}>
         <QueryClientProvider client={queryClient}>
           <RainbowKitProvider>
@@ -22,7 +22,7 @@ function TryPage(props: ContentProps) {
           </RainbowKitProvider>
         </QueryClientProvider>
       </WagmiProvider>
-    </ZkRegexProvider>
+    </ZkEmailSDKProvider>
 
   );
 };

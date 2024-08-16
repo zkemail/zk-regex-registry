@@ -1,28 +1,28 @@
 'use client';
 import GoogleAuthProvider from "./src/providers/GoogleAuthProvider";
 import GoogleAuthContext from "./src/contexts/GoogleAuth";
-import ZkRegexContext, { ProofStatus } from "./src/contexts/ZkRegex";
+import ZKEmailSDKContext, { ProofStatus } from "./src/contexts/ZkEmailSDK";
 import useGoogleAuth from "./src/hooks/useGoogleAuth";
 import { fetchEmailList, fetchEmailsRaw, fetchProfile } from "./src/hooks/useGmailClient";
 import { ReactNode, useState } from "react";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 // import React from "react";
-import useZkRegex from './src/hooks/useZkRegex';
+import useZkEmailSDK from './src/hooks/useZkEmailSDK';
 import { encode } from 'js-base64';
 
 interface ProvidersProps {
   children: ReactNode;
   clientId: string;
-  zkRegexRegistryUrl: string;
+  zkEmailSDKRegistryUrl: string;
 }
 
-function ZkRegexProvider({children, clientId, zkRegexRegistryUrl}: ProvidersProps) {
+function ZkEmailSDKProvider({children, clientId, zkEmailSDKRegistryUrl}: ProvidersProps) {
 
   const [inputWorkers, setInputWorkers] = useState<Record<string, Worker>>({});
   const [proofStatus, setProofStatus] = useState<Record<string, ProofStatus>>({});
 
   function createInputWorker(name: string): void {
-      fetch(`${zkRegexRegistryUrl}/api/script/circuit_input/${name}`, {headers: {
+      fetch(`${zkEmailSDKRegistryUrl}/api/script/circuit_input/${name}`, {headers: {
         'Accept': 'text/javascript'
       }}).then(async r => {
         const js = await r.text();
@@ -50,7 +50,7 @@ function ZkRegexProvider({children, clientId, zkRegexRegistryUrl}: ProvidersProp
   }
 
   async function generateProofRemotely(name: string, input: any) {
-    const res = await fetch(`${zkRegexRegistryUrl}/api/proof/${name}`, {
+    const res = await fetch(`${zkEmailSDKRegistryUrl}/api/proof/${name}`, {
       method: 'POST',
       body: JSON.stringify(input),
       headers: {
@@ -75,7 +75,7 @@ function ZkRegexProvider({children, clientId, zkRegexRegistryUrl}: ProvidersProp
   }
 
   const contextValues = {
-    zkRegexRegistryUrl,
+    zkEmailSDKRegistryUrl,
     customInputGenWorkerSrc: {},
     inputWorkers,
     createInputWorker,
@@ -101,14 +101,14 @@ function ZkRegexProvider({children, clientId, zkRegexRegistryUrl}: ProvidersProp
 
 
   return (
-    <ZkRegexContext.Provider value={contextValues}>
+    <ZKEmailSDKContext.Provider value={contextValues}>
       <GoogleOAuthProvider clientId={clientId}>
         <GoogleAuthProvider>
           {children}
         </GoogleAuthProvider>
       </GoogleOAuthProvider>
-    </ZkRegexContext.Provider>
+    </ZKEmailSDKContext.Provider>
   );
 }
 
-export { ZkRegexProvider, GoogleAuthContext, useGoogleAuth, fetchEmailList, fetchEmailsRaw, fetchProfile, useZkRegex }
+export { ZkEmailSDKProvider, GoogleAuthContext, useGoogleAuth, fetchEmailList, fetchEmailsRaw, fetchProfile, useZkEmailSDK }

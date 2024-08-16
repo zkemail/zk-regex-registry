@@ -1,5 +1,5 @@
 {
-  "name": "zk-regex-registry-app",
+  "name": "zk-email-sdk-app",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -48,7 +48,7 @@
     "vm-browserify": "^1.1.2",
     "wagmi": "^2.12.1",
     "webpack": "^5.92.1",
-    "@zk-email/zk-regex-sdk": "^1.0.3",
+    "@zk-email/zk-email-sdk": "^1.0.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {

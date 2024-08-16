@@ -11,9 +11,9 @@ import { toHex } from 'viem';
 import { Entry } from '@prisma/client';
 
 export const config = getDefaultConfig({
-  appName: 'ZK Regex Regsitry',
+  appName: 'ZK Email SDK Regsitry',
   projectId: '7a5727ef2bfa0be0186ec17111b106b0',
-  chains: [ sepolia, foundry],
+  chains: [sepolia, foundry],
   wallets: [{groupName: 'default', wallets: [metaMaskWallet, rabbyWallet, rainbowWallet]}],
   ssr: true, // If your dApp uses server side rendering (SSR)
 });

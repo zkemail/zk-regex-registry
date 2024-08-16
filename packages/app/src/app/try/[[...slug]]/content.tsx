@@ -4,17 +4,16 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Entry } from "@prisma/client";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { useState, useEffect, FormEvent } from "react";
-import { useGoogleAuth, fetchEmailList, fetchEmailsRaw, fetchProfile, useZkRegex } from "@zk-email/zk-regex-sdk";
+import { useGoogleAuth, fetchEmailList, fetchEmailsRaw, useZkEmailSDK } from "@zk-email/zk-email-sdk";
 import { Check, X } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import PostalMime from 'postal-mime';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useAccount, useSimulateContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
-import { BaseError, getAddress, Hex } from "viem";
+import { useAccount, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { BaseError, Hex } from "viem";
 import '@rainbow-me/rainbowkit/styles.css';
 import { circuitOutputToArgs, parseOutput } from "@/lib/contract";
-import { ProofStatus } from "@zk-email/zk-regex-sdk/dist/src/contexts/ZkRegex";
 import { SimpleDialog } from "@/components/simple-dialog";
 import { calculateSignalLength } from "@/lib/code-gen/utils";
 
@@ -47,7 +46,7 @@ export function PageContent(props: ContentProps) {
         generateProofRemotely,
         proofStatus,
         inputWorkers,
-    } = useZkRegex();
+    } = useZkEmailSDK();
 
     const account = useAccount();
 

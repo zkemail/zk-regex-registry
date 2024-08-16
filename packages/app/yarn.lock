@@ -2467,6 +2467,14 @@
     psl "^1.9.0"
     snarkjs "https://github.com/sampritipanda/snarkjs.git#fef81fc51d17a734637555c6edbd585ecda02d9e"
 
+"@zk-email/zk-email-sdk@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@zk-email/zk-email-sdk/-/zk-email-sdk-1.0.3.tgz#ba263b43bec8b92d83aec069d248c304c279489b"
+  integrity sha512-Er2PRnqslONgiinPDbK5yjBZplG6dIv7P7MOdXPNIVDpZgOvfUb7ndxTWUqXJ1A3208ezodVfW4fImqYuuCAqA==
+  dependencies:
+    "@react-oauth/google" "^0.12.1"
+    js-base64 "^3.7.7"
+
 "@zk-email/zk-regex-circom@^2.1.0":
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/@zk-email/zk-regex-circom/-/zk-regex-circom-2.1.0.tgz#cc2f1d93fb130a9f8ac88114d3559a296df97538"
@@ -2474,14 +2482,6 @@
   dependencies:
     commander "^11.0.0"
     snarkjs "^0.7.0"
-
-"@zk-email/zk-regex-sdk@^1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@zk-email/zk-regex-sdk/-/zk-regex-sdk-1.0.3.tgz#49f89ec658a2eeb9de9a7bc2e31bd2f9b2d3df7b"
-  integrity sha512-cK0Kx/417BcfAVcimROZQytqLd5wYT0+Khpw6GSgBKn3rj1XsXOxT0kcR0pxr4hgn8Bkh8ualI38uQxJ47rQvA==
-  dependencies:
-    "@react-oauth/google" "^0.12.1"
-    js-base64 "^3.7.7"
 
 abitype@1.0.5:
   version "1.0.5"

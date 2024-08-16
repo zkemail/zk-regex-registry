@@ -6,8 +6,8 @@ import { Header } from "@/components/header";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "ZK Regex Registry",
-  description: "Registry of ZK regex patterns",
+  title: "ZK Email SDK Registry",
+  description: "Registry of ZK email patterns for use with the SDK",
 };
 
 export default function RootLayout({

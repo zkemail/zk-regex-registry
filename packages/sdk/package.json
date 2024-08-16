@@ -1,5 +1,5 @@
 {
-  "name": "@zk-email/zk-regex-sdk",
+  "name": "@zk-email/zk-email-sdk",
   "version": "1.0.3",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -40,10 +40,10 @@ export default async function Home({searchParams: {page, query}}: {searchParams:
           <div className="flex text-center justify-center items-center gap-4 flex-col">
             <div className="flex gap-2 flex-col">
               <h4 className="text-3xl md:text-5xl tracking-tighter max-w-xl text-center font-extrabold mb-4">
-                ZK Regex Registry
+                ZK Email SDK Registry
               </h4>
               <p className="text-lg leading-relaxed tracking-tight text-muted-foreground max-w-xl text-center">
-                List of community submitted ZK Regex patterns that can be dropped into your project.
+                List of community submitted ZK Email patterns that can be dropped into your project.
               </p>
             </div>
             <div>

@@ -118,7 +118,7 @@ export async function addDkimEntry(entry: Entry): Promise<void> {
    const account = privateKeyToAccount(privateKey as Hex);
    const client = createWalletClient({
      account,
-     chain: sepolia,
+     chain: optimismSepolia,
      transport: http()
    });
 
