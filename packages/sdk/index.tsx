@@ -66,7 +66,7 @@ function ZkEmailSDKProvider({children, clientId, zkEmailSDKRegistryUrl}: Provide
   }
 
   async function poolForProofStatus(url: string) {
-    const res = await fetch(url);
+    const res = await fetch(zkEmailSDKRegistryUrl + url);
     const data = await res.json();
     setProofStatus((prev) => ({...prev, [data.id]:data}));
     if (data.status !== 'COMPLETED') {
