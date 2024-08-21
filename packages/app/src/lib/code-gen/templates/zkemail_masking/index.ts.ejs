@@ -10,7 +10,7 @@ const externalInputs = {
 <% }) %>
 }
 
-externalInputs["mask"] = Array.apply(null, {length: <%- emailBodyMaxLength %>}).map(() => 0);
+externalInputs["mask"] = JSON.stringify(Array.apply(null, {length: <%- emailBodyMaxLength %>}).map(() => 0));
 // Either download the .eml file or click "show original" in your email client and copy the entire raw email (together with the headers)
 const rawEmail = ``;
 
