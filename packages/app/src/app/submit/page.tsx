@@ -11,7 +11,7 @@ import { Plus, Trash } from 'lucide-react';
 import { formSchema } from './form';
 import { createEntry } from './action';
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogHeader } from '@/components/ui/dialog';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FromAddressPattern, SubjectPattern, TimestampPattern, ToAddressPattern } from './patterns';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectLabel, SelectItem } from '@/components/ui/select';
 
@@ -28,6 +28,7 @@ export default function Submit() {
             parameters: {
                 name: "",
                 ignoreBodyHashCheck: true,
+                enableMasking: false,
                 shaPrecomputeSelector: "",
                 emailBodyMaxLength: 4032,
                 senderDomain: "",
@@ -55,6 +56,17 @@ export default function Submit() {
     const [modalMessage, setModalMessage] = useState<string>("");
     const [modalError, setModalError] = useState<boolean>(false);
 
+    const maskingEnabled = form.watch("parameters.enableMasking")
+
+    useEffect(() => {
+        if (!externalInputs.find(i => i.name === "mask") && maskingEnabled) {
+            appendInput({
+                name: "mask",
+                maxLength: form.getValues("parameters.emailBodyMaxLength")
+            })
+        }
+    }, [maskingEnabled])
+
     function fillDemo() {
         const sampleForm:{[key:string]:any} = {
             "title": "Proof of Twitter",
@@ -65,6 +77,7 @@ export default function Submit() {
             "useNewSdk": true,
             "parameters.name": "twitter",
             "parameters.ignoreBodyHashCheck": false,
+            "parameters.enableMasking": false,
             "parameters.shaPrecomputeSelector": ">Not my account<",
             "parameters.senderDomain": "x.com",
             "parameters.emailBodyMaxLength": 4032,
@@ -324,6 +337,20 @@ export default function Submit() {
                                 />
                                 <FormField
                                     control={form.control}
+                                    name="parameters.enableMasking"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Enable email masking?</FormLabel>
+                                            <FormControl>
+                                                <Checkbox className="ml-2" checked={field.value} onCheckedChange={field.onChange} />
+                                            </FormControl>
+                                            <FormDescription>Enable and send a mask to return a masked email in the public output</FormDescription>
+                                            <FormMessage></FormMessage>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
                                     name="parameters.senderDomain"
                                     render={({ field }) => (
                                         <FormItem>
@@ -467,7 +494,7 @@ export default function Submit() {
                                 {externalInputs.map((v, i) => {
                                     return (
                                         <div className='pl-8 pb-4' key={v.id}>
-                                            <div className="flex flex-row items-center"><b>Field #{i + 1}</b>{i !== 0 && <Trash color="red" className="ml-2" onClick={() => removeExternalInputObject(i)}/>}</div>
+                                            <div className="flex flex-row items-center"><b>Field #{i + 1}</b><Trash color="red" className="ml-2" onClick={() => removeExternalInputObject(i)}/></div>
                                             <FormField
                                                 control={form.control}
                                                 name={`parameters.externalInputs.${i}.name`}

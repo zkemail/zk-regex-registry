@@ -1,0 +1,53 @@
+const { generateEmailVerifierInputs, packBytesIntoNBytes } = require("@zk-email/helpers");
+
+export async function generateCircuitInputs(rawEmail, inputs) {
+    const circuitInputs = await generateEmailVerifierInputs(rawEmail, {
+        ignoreBodyHashCheck: <%- ignoreBodyHashCheck %>,
+        maxBodyLength: <%- ignoreBodyHashCheck ? 0 : emailBodyMaxLength %>,
+        maxHeaderLength: 1024,
+        shaPrecomputeSelector: "<%- shaPrecomputeSelector %>",
+        enableBodyMasking: true,
+        mask: inputs["mask"] || Array.apply(null, {length: <%- emailBodyMaxLength %> }).map(() => 0)
+    });
+
+    const emailBodyString = circuitInputs.emailBody ? Buffer.from(circuitInputs.emailBody.map(Number)).toString('ascii') : null;
+    const emailHeaderString = circuitInputs.emailHeader ? Buffer.from(circuitInputs.emailHeader.map(Number)).toString('ascii') : null;
+    let regexInputs = {};
+    let match;
+    <% values.forEach(function(value) { %>
+    <% if (value.location === "body") { %>
+    match = emailBodyString.match(new RegExp(<%- value.prefixRegex %>))
+    <% } else { %>
+    match = emailHeaderString.match(new RegExp(<%- value.prefixRegex %>))
+    <% } %>
+    if (match) {
+        regexInputs = {
+            ...regexInputs,
+            <%- value.name %>RegexIdx: match.index + match[0].length
+        }
+    }
+    match = null;
+    <% }) %>
+
+    const packedInputs = {};
+
+    <% externalInputs.forEach(function(input) { if (input.name === "mask") return; %>
+    {
+        const key = "<%- input.name %>";
+        const length = <%- Math.floor(input.maxLength / 31) + (input.maxLength % 31 ? 1 : 0) %>;
+        packedInputs[key] = packBytesIntoNBytes(inputs[key] || "", 31).map(s => s.toString());
+        while (packedInputs[key].length < length) {
+            packedInputs[key].push("0");
+        }
+        if (packedInputs[key].length > length) {
+            throw new Error(`Invalid input length for ${key} needs to be less than <%- input.maxLength %>`)
+        }
+    }
+    <% }); %>
+
+    return {
+        ...circuitInputs,
+        ...regexInputs,
+        ...packedInputs
+    }
+}

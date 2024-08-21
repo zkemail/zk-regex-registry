@@ -82,10 +82,9 @@ export function PageContent(props: ContentProps) {
         }
         createInputWorker(entry.slug);
         workers.set(entry.slug, true);
-        const values = (entry?.parameters as any).values as any;
         const entryExternalInputs = (entry.parameters as any).externalInputs as {name: string, maxLength: number}[] || [];
 
-        setSignalLength(calculateSignalLength(values, entryExternalInputs))
+        setSignalLength(calculateSignalLength(entry))
         for (const input of entryExternalInputs) {
             setExternalInputs({
                 ...externalInputs,
@@ -147,7 +146,7 @@ export function PageContent(props: ContentProps) {
             return (<>
             <p className="mb-4">This pattern requires you to also submit an external input to the circuit.</p>
             {Object.keys(externalInputs).map(name => {
-                return (<div key={name}><b className="mb-2">Address</b><Input placeholder={name} onChange={(e) => {setExternalInputs({
+                return (<div key={name}><b>Input {name}</b><br/><Input placeholder={name} onChange={(e) => {setExternalInputs({
                     ...externalInputs,
                     [name]: e.target.value,
                 })}}></Input></div>)

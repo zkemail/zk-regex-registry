@@ -9,6 +9,7 @@ import { spawn } from 'child_process';
 import { mapPrefixRegex } from './utils';
 
 const EXAMPLE_PROJECT_TYPE = 'zkemail_example';
+const MASKING_PROJECT_TYPE = 'zkemail_masking';
 
 // Define the directory path
 const templatesDir = './src/lib/code-gen/templates'
@@ -33,16 +34,20 @@ export const generateCodeLibrary = async (parameters: any, outputName: string, s
             throw new Error('Unsafe directory pattern detected');
         }
     }
+    let projectType = EXAMPLE_PROJECT_TYPE;
+    if (parameters.enableMasking) {
+        projectType = MASKING_PROJECT_TYPE;
+    }
     let promises = [];
     parameters = fillDefaultParameters(parameters);
     if (parameters.version === "v2") {
         const mappedParams = mapPrefixRegex(parameters);
         console.log(JSON.stringify(parameters,null, 2));
         console.log(JSON.stringify(mappedParams,null, 2));
-        generateFromTemplate(path.join(templatesDir, EXAMPLE_PROJECT_TYPE), mappedParams, path.join(outputDir, outputName));
+        generateFromTemplate(path.join(templatesDir, projectType), mappedParams, path.join(outputDir, outputName));
         promises.push(generateZkRegexCircuitV2(path.join(outputDir, outputName, "circuit", "regex"), mappedParams));
     } else {
-        generateFromTemplate(path.join(templatesDir, EXAMPLE_PROJECT_TYPE), parameters, path.join(outputDir, outputName));
+        generateFromTemplate(path.join(templatesDir, projectType), parameters, path.join(outputDir, outputName));
         generateZkRegexCircuit(path.join(outputDir, outputName, "circuit", "regex"), parameters);
     }
     promises.push(generateCircuitInputsWorker(path.join(outputDir, outputName), outputName));

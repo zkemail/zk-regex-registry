@@ -1,3 +1,5 @@
+import { Entry } from "@prisma/client";
+
 export function mapPrefixRegex(parameters: any): any {
     const mappedValues = parameters.values.map((v: { parts: { is_public: boolean, regex_def: string }[] }) => {
         const prefixRegex = getPrefixRegex(v.parts)
@@ -22,8 +24,16 @@ export function getPrefixRegex(parts: { is_public: boolean, regex_def: string }[
     return JSON.stringify(prefixRegex)
 }
 
-export function calculateSignalLength(values: {maxLength: number}[], externalInputs: {maxLength: number}[] = []) {
-    const valuesLength = values.reduce((acc, value) => acc + Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0), 1);
-    const inputsLength = externalInputs.reduce((acc, value) => acc + Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0), 0);
+export function calculateSignalLength(entry: Entry) {
+    let startIdx = 1;
+    const parameters = entry.parameters as {values: {maxLength: number}[], externalInputs: {maxLength: number}[], emailBodyMaxLength: number, enableMasking: boolean};
+    if (parameters.enableMasking) {
+        startIdx += parameters.emailBodyMaxLength;
+    }
+    if (!parameters.externalInputs) {
+        parameters.externalInputs = []
+    }
+    const valuesLength = parameters.values.reduce((acc, value) => acc + Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0), startIdx);
+    const inputsLength = parameters.externalInputs.reduce((acc, value) => acc + Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0), 0);
     return valuesLength + inputsLength;
 }

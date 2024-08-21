@@ -1,0 +1,65 @@
+pragma solidity >=0.8.13;
+
+import "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
+import "@zk-email/contracts/utils/StringUtils.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "./verifier.sol";
+
+contract Contract is Ownable {
+    // ============================
+    // Dependent Contracts
+    // ============================
+    IDKIMRegistry public dkimRegistry;
+    Groth16Verifier public verifier;
+
+    // ============================
+    // Prover Constants (Auto-generated)
+    // ============================
+    uint16 public constant pack_size = 31;
+    uint16 public constant pubkey_hash_len = 1;
+    string public constant domain = "<%- senderDomain %>";
+<% let signal_size = 1 + emailBodyMaxLength; values.forEach(function(value) { const packSize = Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0) %>
+    uint16 public constant <%- value.name %>_len = <%- packSize %>;<% signal_size += packSize;}) %>
+
+<% externalInputs.forEach(function(value) { const packSize = Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0) %>
+    uint16 public constant <%- value.name %>_len = <%- packSize %>;<% signal_size += packSize;}) %>
+
+    // ============================
+    // Nullifier
+    // ============================
+    // mapping (string => bool) public nullifiers;    
+
+    constructor (IDKIMRegistry r, Groth16Verifier v) Ownable(msg.sender) {
+        dkimRegistry = r;
+        verifier = v;
+    }
+
+    function verify(uint[2] calldata a, uint[2][2] calldata b, uint[2] calldata c, uint[<%-signal_size%>] calldata signals) external {
+        // verify RSA
+        bytes32 ph = bytes32(signals[0]);
+        require(dkimRegistry.isDKIMPublicKeyHashValid(domain, ph), "RSA public key incorrect");
+<% let cur_idx = 1 + emailBodyMaxLength; values.forEach(function(value) { %>
+        // unpack <%- value.name %>
+        uint[] memory packed_<%- value.name %> = new uint[](<%- value.name %>_len);
+        for (uint i = 0; i < <%- value.name %>_len; i++) {
+            packed_<%- value.name %>[i] = signals[<%- cur_idx %> + i];
+        }
+        string memory <%- value.name %>_string = StringUtils.convertPackedBytesToString(packed_<%- value.name %>, pack_size * <%- value.name %>_len, pack_size); 
+<% const packSize = Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0); cur_idx += packSize;}) %>
+
+<% externalInputs.forEach(function(value) { %>
+        // unpack <%- value.name %>
+        uint[] memory packed_<%- value.name %> = new uint[](<%- value.name %>_len);
+        for (uint i = 0; i < <%- value.name %>_len; i++) {
+            packed_<%- value.name %>[i] = signals[<%- cur_idx %> + i];
+        }
+        string memory <%- value.name %>_string = StringUtils.convertPackedBytesToString(packed_<%- value.name %>, pack_size * <%- value.name %>_len, pack_size); 
+<% const packSize = Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0); cur_idx += packSize;}) %>
+
+        // require(!nullifiers[handleString], "Unique handle required");
+
+        // verify proof
+        require(verifier.verifyProof(a,b,c,signals));
+        // nullifiers[handleString] = true;
+    }
+}

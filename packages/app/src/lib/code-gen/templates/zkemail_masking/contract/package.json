@@ -1,0 +1,17 @@
+{
+  "name": "contracts",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test",
+    "deploy-local": "forge script Deploy.s.sol --rpc-url http://127.0.0.1:8545",
+    "deploy-ss": "forge script Deploy.s.sol --rpc-url https://sepolia-rpc.scroll.io"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.0",
+    "@openzeppelin/contracts-upgradeable": "^5.0.0",
+    "@zk-email/contracts": "^6.1.3",
+    "ds-test": "https://github.com/dapphub/ds-test",
+    "forge-std": "https://github.com/foundry-rs/forge-std"
+  }
+}

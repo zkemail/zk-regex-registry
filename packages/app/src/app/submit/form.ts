@@ -22,6 +22,7 @@ export const formSchema = z.object({
     parameters: z.object({
         name: z.string(),
         ignoreBodyHashCheck: z.boolean(),
+        enableMasking: z.boolean(),
         shaPrecomputeSelector: z.string(),
         senderDomain: z.string(),
         dkimSelector: z.string().optional(),
