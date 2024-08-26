@@ -57,7 +57,7 @@ template <%- name %>(maxHeaderLength, maxBodyLength, n, k, packSize) {
 <% values.forEach(function(value){ %>
     // <%- value.name.toUpperCase() %> Extraction
     signal input <%- value.name %>RegexIdx;
-    var <%- value.name %>MaxLength = 64;
+    var <%- value.name %>MaxLength = <%- value.maxLength %>;
     signal <%- value.name %>RegexOut, <%- value.name %>RegexReveal[<%- (value.location === 'body') ? 'maxBodyLength' : 'maxHeaderLength' %>];
 <% if (["from", "to"].includes(value.location)) { %>
     (<%- value.name %>RegexOut, <%- value.name %>RegexReveal) <== <%- value.location === 'to' ? 'ToAddrRegex' : 'FromAddrRegex' %>(maxHeaderLength)(emailHeader);
