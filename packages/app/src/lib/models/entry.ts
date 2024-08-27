@@ -1,3 +1,4 @@
+import { Entry, Prisma } from "@prisma/client"
 import prisma from "../prisma"
 
 export type ZkRegexParameters = {
@@ -59,4 +60,16 @@ export const getFirstPendingEntry = async () => {
 export const getFirstUndeployedEntry = async () => {
     const entry = await prisma.entry.findFirst({where: {status: "COMPLETED", verifierContractAddress: null}, orderBy: {createdAt: 'asc'}});
     return entry
+}
+
+export const updateEntry = async (entry: Entry) => {
+    await prisma.entry.update({
+        where: {
+            slug: entry.slug,
+        },
+        data: {
+            ...entry,
+            parameters: entry.parameters as Prisma.InputJsonValue
+        }
+    })
 }
