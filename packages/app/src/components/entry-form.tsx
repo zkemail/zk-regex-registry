@@ -12,7 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { formSchema } from "@/app/submit/form";
 import { FromAddressPattern, SubjectPattern, TimestampPattern, ToAddressPattern } from "@/app/submit/patterns";
 import { Entry } from "@prisma/client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface EntryFormProps {
     onSubmit: (values: z.infer<typeof formSchema>) => void,
@@ -20,6 +20,7 @@ interface EntryFormProps {
 }
 
 export function EntryForm( {onSubmit, entry}: EntryFormProps) {
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -37,25 +38,21 @@ export function EntryForm( {onSubmit, entry}: EntryFormProps) {
                 emailBodyMaxLength: 4032,
                 senderDomain: "",
                 dkimSelector: "",
-                values: [
-                    {
-                        name: "",
-                        maxLength: 64,
-                        regex: "",
-                        prefixRegex: "",
-                        location: "body",
-                        revealStates: "[]",
-                        parts: "[]"
-                    }
-                ],
+                values: [],
                 externalInputs: []
             }
 
         },
     })
 
+    const { fields, append, remove } = useFieldArray({control: form.control, name: "parameters.values"})
+    const { fields: externalInputs, append: appendInput, remove: removeInput } = useFieldArray({control: form.control, name: "parameters.externalInputs"})
+    const [filled, setFilled] = useState<boolean>(false);
+
     useEffect(() => {
-        if (entry) {
+        if (entry && !filled) {
+            setFilled(true);
+            form.reset();
             const parameters = entry.parameters as any;
             let filledForm: { [key: string]: any } = {
                 "title": entry.title,
@@ -72,29 +69,27 @@ export function EntryForm( {onSubmit, entry}: EntryFormProps) {
                 "parameters.emailBodyMaxLength": parameters.emailBodyMaxLength,
                 "parameters.dkimSelector": parameters.dkimSelector,
             }
-            for (let i = 0; i < parameters.values.length; i++) {
-                const value = parameters.values[i];
-                filledForm[`parameters.values.${i}.name`] = value.name;
-                filledForm[`parameters.values.${i}.location`] = value.location;
-                filledForm[`parameters.values.${i}.maxLength`] = value.maxLength;
-                filledForm[`parameters.values.${i}.regex`] = value.regex;
-                filledForm[`parameters.values.${i}.prefixRegex`] = value.prefixRegex;
-                filledForm[`parameters.values.${i}.parts`] = JSON.stringify(value.parts, null, 2);
-            }
-            for (let i = 0; i < parameters.externalInputs.length; i++) {
-                const value = parameters.externalInputs[i];
-                filledForm[`parameters.externalInputs.${i}.name`] = value.name;
-                filledForm[`parameters.externalInputs.${i}.maxLength`] = value.maxLength;
-            }
 
             for (let v of Object.keys(filledForm)) {
                 form.setValue(v as any, filledForm[v])
             }
+
+            for (let i = 0; i < parameters.values.length; i++) {
+                const value = parameters.values[i];
+                append({
+                    ...value,
+                    parts: JSON.stringify(value.parts, null, 2),
+                })
+            }
+
+            for (let i = 0; i < parameters.externalInputs.length; i++) {
+                const value = parameters.externalInputs[i];
+                appendInput({
+                    ...value
+                });
+            }
         }
     }, [entry]);
-
-    const { fields, append, remove } = useFieldArray({control: form.control, name: "parameters.values"})
-    const { fields: externalInputs, append: appendInput, remove: removeInput } = useFieldArray({control: form.control, name: "parameters.externalInputs"})
 
     function addValueObject() {
         append({
