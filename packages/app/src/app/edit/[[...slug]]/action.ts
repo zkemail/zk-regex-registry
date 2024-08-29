@@ -17,7 +17,8 @@ export async function submit(values: z.infer<typeof formSchema>) {
             ...values.parameters,
             version: values.useNewSdk ? "v2" : "v1",
         } as Prisma.InputJsonValue,
-        emailQuery: values.emailQuery
+        emailQuery: values.emailQuery,
+        status: "PENDING"
     } as Entry;
 
     try {
