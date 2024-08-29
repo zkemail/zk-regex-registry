@@ -16,7 +16,7 @@ import { useEffect } from "react";
 
 interface EntryFormProps {
     onSubmit: (values: z.infer<typeof formSchema>) => void,
-    entry: Entry,
+    entry?: Entry,
 }
 
 export function EntryForm( {onSubmit, entry}: EntryFormProps) {
@@ -55,41 +55,43 @@ export function EntryForm( {onSubmit, entry}: EntryFormProps) {
     })
 
     useEffect(() => {
-        const parameters = entry.parameters as any;
-        let filledForm: { [key: string]: any } = {
-            "title": entry.title,
-            "description": entry.description,
-            "slug": entry.slug,
-            "tags": entry.tags.join(","),
-            "emailQuery": entry.emailQuery,
-            "useNewSdk": parameters.version === "v2",
-            "parameters.name": parameters.name,
-            "parameters.ignoreBodyHashCheck": parameters.ignoreBodyHashCheck,
-            "parameters.enableMasking": !!parameters.enableMasking,
-            "parameters.shaPrecomputeSelector": parameters.shaPrecomputeSelector,
-            "parameters.senderDomain": parameters.senderDomain,
-            "parameters.emailBodyMaxLength": parameters.emailBodyMaxLength,
-            "parameters.dkimSelector": parameters.dkimSelector,
-        }
-        for (let i = 0; i < parameters.values.length; i++) {
-            const value = parameters.values[i];
-            filledForm[`parameters.values.${i}.name`] = value.name;
-            filledForm[`parameters.values.${i}.location`] = value.location;
-            filledForm[`parameters.values.${i}.maxLength`] = value.maxLength;
-            filledForm[`parameters.values.${i}.regex`] = value.regex;
-            filledForm[`parameters.values.${i}.prefixRegex`] = value.prefixRegex;
-            filledForm[`parameters.values.${i}.parts`] = JSON.stringify(value.parts, null, 2);
-        }
-        for (let i = 0; i < parameters.externalInputs.length; i++) {
-            const value = parameters.externalInputs[i];
-            filledForm[`parameters.externalInputs.${i}.name`] = value.name;
-            filledForm[`parameters.externalInputs.${i}.maxLength`] = value.maxLength;
-        }
+        if (entry) {
+            const parameters = entry.parameters as any;
+            let filledForm: { [key: string]: any } = {
+                "title": entry.title,
+                "description": entry.description,
+                "slug": entry.slug,
+                "tags": entry.tags.join(","),
+                "emailQuery": entry.emailQuery,
+                "useNewSdk": parameters.version === "v2",
+                "parameters.name": parameters.name,
+                "parameters.ignoreBodyHashCheck": parameters.ignoreBodyHashCheck,
+                "parameters.enableMasking": !!parameters.enableMasking,
+                "parameters.shaPrecomputeSelector": parameters.shaPrecomputeSelector,
+                "parameters.senderDomain": parameters.senderDomain,
+                "parameters.emailBodyMaxLength": parameters.emailBodyMaxLength,
+                "parameters.dkimSelector": parameters.dkimSelector,
+            }
+            for (let i = 0; i < parameters.values.length; i++) {
+                const value = parameters.values[i];
+                filledForm[`parameters.values.${i}.name`] = value.name;
+                filledForm[`parameters.values.${i}.location`] = value.location;
+                filledForm[`parameters.values.${i}.maxLength`] = value.maxLength;
+                filledForm[`parameters.values.${i}.regex`] = value.regex;
+                filledForm[`parameters.values.${i}.prefixRegex`] = value.prefixRegex;
+                filledForm[`parameters.values.${i}.parts`] = JSON.stringify(value.parts, null, 2);
+            }
+            for (let i = 0; i < parameters.externalInputs.length; i++) {
+                const value = parameters.externalInputs[i];
+                filledForm[`parameters.externalInputs.${i}.name`] = value.name;
+                filledForm[`parameters.externalInputs.${i}.maxLength`] = value.maxLength;
+            }
 
-        for (let v of Object.keys(filledForm)) {
-            form.setValue(v as any, filledForm[v])
+            for (let v of Object.keys(filledForm)) {
+                form.setValue(v as any, filledForm[v])
+            }
         }
-    }, []);
+    }, [entry]);
 
     const { fields, append, remove } = useFieldArray({control: form.control, name: "parameters.values"})
     const { fields: externalInputs, append: appendInput, remove: removeInput } = useFieldArray({control: form.control, name: "parameters.externalInputs"})
@@ -120,6 +122,17 @@ export function EntryForm( {onSubmit, entry}: EntryFormProps) {
     function removeExternalInputObject(i: number) {
         removeInput(i)
     }
+
+    const maskingEnabled = form.watch("parameters.enableMasking")
+
+    useEffect(() => {
+        if (maskingEnabled && !externalInputs.find(i => i.name === "mask")) {
+            appendInput({
+                name: "mask",
+                maxLength: form.getValues("parameters.emailBodyMaxLength")
+            })
+        }
+    }, [maskingEnabled])
 
     async function onFormSubmit(values: z.infer<typeof formSchema>) {
         await onSubmit(values)
@@ -405,7 +418,7 @@ export function EntryForm( {onSubmit, entry}: EntryFormProps) {
             {fields.map((v, i) => {
                 return (
                     <div className='pl-8 pb-4' key={v.id}>
-                        <div className="flex flex-row items-center"><b>Field #{i + 1}</b>{i !== 0 && <Trash color="red" className="ml-2" onClick={() => removeValueObject(i)}/>}</div>
+                        <div className="flex flex-row items-center"><b>Field #{i + 1}</b>{(maskingEnabled || i !== 0) && <Trash color="red" className="ml-2" onClick={() => removeValueObject(i)}/>}</div>
                         <FormField
                             control={form.control}
                             name={`parameters.values.${i}.name`}
