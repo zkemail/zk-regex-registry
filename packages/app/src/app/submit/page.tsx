@@ -76,7 +76,7 @@ export default function Submit() {
                     <div className="flex text-left justify-center items-center gap-4 flex-col px-10 md:px-40">
                         <h1 className="text-xl md:text-3xl tracking-tighter text-left font-extrabold">Submit new pattern</h1>
                         <Button className="mb-6" variant="secondary" size="sm" onClick={fillDemo}>Fill form using a sample</Button>
-                        <EntryForm entry={entry} onSubmit={onSubmit} />
+                        <EntryForm entry={entry} onFormSubmit={onSubmit} />
                     </div>
                 </div>
             </div>

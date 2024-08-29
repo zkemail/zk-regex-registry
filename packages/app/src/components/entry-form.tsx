@@ -15,11 +15,11 @@ import { Entry } from "@prisma/client";
 import { useEffect, useState } from "react";
 
 interface EntryFormProps {
-    onSubmit: (values: z.infer<typeof formSchema>) => void,
+    onFormSubmit: (values: z.infer<typeof formSchema>) => void,
     entry?: Entry,
 }
 
-export function EntryForm( {onSubmit, entry}: EntryFormProps) {
+export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -47,11 +47,9 @@ export function EntryForm( {onSubmit, entry}: EntryFormProps) {
 
     const { fields, append, remove } = useFieldArray({control: form.control, name: "parameters.values"})
     const { fields: externalInputs, append: appendInput, remove: removeInput } = useFieldArray({control: form.control, name: "parameters.externalInputs"})
-    const [filled, setFilled] = useState<boolean>(false);
 
     useEffect(() => {
-        if (entry && !filled) {
-            setFilled(true);
+        if (entry) {
             form.reset();
             const parameters = entry.parameters as any;
             let filledForm: { [key: string]: any } = {
@@ -76,13 +74,27 @@ export function EntryForm( {onSubmit, entry}: EntryFormProps) {
 
             for (let i = 0; i < parameters.values.length; i++) {
                 const value = parameters.values[i];
-                append({
-                    ...value,
-                    parts: JSON.stringify(value.parts, null, 2),
-                })
+                console.log(value)
+                if (parameters.version === "v2") {
+                    append({
+                        location: value.location,
+                        name: value.name,
+                        maxLength: value.maxLength,
+                        parts: JSON.stringify(value.parts, null, 2),
+                    })
+                } else {
+                    append({
+                        location: value.location,
+                        name: value.name,
+                        maxLength: value.maxLength,
+                        regex: value.regex,
+                        prefixRegex: value.prefixRegex,
+                        revealStates: JSON.stringify(value.revealStates),
+                    })
+                }
             }
 
-            for (let i = 0; i < parameters.externalInputs.length; i++) {
+            for (let i = 0; i < (parameters.externalInputs || []).length; i++) {
                 const value = parameters.externalInputs[i];
                 appendInput({
                     ...value
@@ -129,8 +141,8 @@ export function EntryForm( {onSubmit, entry}: EntryFormProps) {
         }
     }, [maskingEnabled])
 
-    async function onFormSubmit(values: z.infer<typeof formSchema>) {
-        await onSubmit(values)
+    function submit(values: z.infer<typeof formSchema>) {
+        onFormSubmit(values)
     }
 
     function displayValueForm(i: number) {
@@ -223,7 +235,7 @@ export function EntryForm( {onSubmit, entry}: EntryFormProps) {
     
     return (
         <Form {...form}>
-        <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-8 w-full">
+        <form onSubmit={form.handleSubmit(submit)} className="space-y-8 w-full" id="edit-form">
             <FormField
                 control={form.control}
                 name="title"

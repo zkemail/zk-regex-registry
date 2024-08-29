@@ -3,7 +3,7 @@
 import { formSchema } from "@/app/submit/form";
 import { updateEntry } from "@/lib/models/entry";
 import { Entry, Prisma } from "@prisma/client";
-import { redirect } from "next/navigation";
+import { redirect, RedirectType } from "next/navigation";
 import { z } from "zod";
 
 export async function submit(values: z.infer<typeof formSchema>) {
@@ -20,14 +20,13 @@ export async function submit(values: z.infer<typeof formSchema>) {
         emailQuery: values.emailQuery,
         status: "PENDING"
     } as Entry;
-
     try {
         await updateEntry(entry)
-        return redirect("/")
     } catch (e: any) {
         return {
             error: true,
             message: "Error updating entry: " + e.toString()
         }
     }
+    redirect("/", RedirectType.push)
 }
