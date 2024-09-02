@@ -20,7 +20,7 @@ export const formSchema = z.object({
     emailQuery: z.string(),
     useNewSdk: z.boolean(),
     parameters: z.object({
-        name: z.string(),
+        name: z.string().min(1),
         ignoreBodyHashCheck: z.boolean(),
         enableMasking: z.boolean(),
         shaPrecomputeSelector: z.string(),
@@ -33,7 +33,7 @@ export const formSchema = z.object({
             return n;
         }),
         values: z.array(z.object({
-            name: z.string(),
+            name: z.string().min(1),
             maxLength: z.coerce.number().positive().default(64),
             regex: z.string().optional(),
             prefixRegex: z.string().optional(),
@@ -65,7 +65,7 @@ export const formSchema = z.object({
             }).optional(),
         })),
         externalInputs: z.array(z.object({
-            name: z.string(),
+            name: z.string().min(1),
             maxLength: z.coerce.number().positive().default(64),
         }))
     }),
