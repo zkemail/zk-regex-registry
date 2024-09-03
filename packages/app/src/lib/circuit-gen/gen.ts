@@ -11,6 +11,27 @@ export function circuitCompilationLogPath(circuitSlug: string): string {
     return path.join(CIRCUIT_OUT_DIR, circuitSlug, 'circuit.log');
 }
 
+export function installProjectDeps(circuitSlug: string): Promise<void> {
+    const circuitLogPath = circuitCompilationLogPath(circuitSlug);
+    return new Promise<void>((resolve, reject) => {
+        const c = spawn("yarn", ["install"], {
+            cwd: path.join(CODE_OUT_DIR, circuitSlug)
+        });
+        // on error
+        c.stderr.on('data', (data) => {
+            process.stderr.write(`stdout: ${data}`);
+            log(circuitLogPath, data, 'circuit-install-deps');
+        });
+        c.on('exit', (code) => {
+            if (code === 0) {
+                resolve();
+            } else {
+                reject();
+            }
+        });
+    });
+}
+
 export function compileCircuit(circuitSlug: string, circuitName: string, force: boolean): Promise<void> {
     const circuitLogPath = circuitCompilationLogPath(circuitSlug);
     console.log(`Compiling circuit for ${circuitSlug} with name ${circuitName} and force ${force}`);
@@ -27,11 +48,11 @@ export function compileCircuit(circuitSlug: string, circuitName: string, force: 
     fs.mkdirSync(circuitDirectory, { recursive: true })
     const circuitPath = path.join(CODE_OUT_DIR, circuitSlug, "circuit", `${circuitName}.circom`)
     fs.writeFileSync(circuitLogPath, "");
+    const nodeModulesPath = path.join(CODE_OUT_DIR, circuitSlug, "node_modules");
     return new Promise<void>((resolve, reject) => {
-        const c = spawn("circom", [circuitPath , '--r1cs', '--wasm', '-o', circuitDirectory, '-l', './node_modules'], {
+        const c = spawn("circom", [circuitPath , '--r1cs', '--wasm', '-o', circuitDirectory, '-l', nodeModulesPath], {
             env: {
                 ...process.env,
-                NO_COLOR: 'true'
             }
         });
         c.stdout.on('data', (data) => {

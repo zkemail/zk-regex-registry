@@ -1,4 +1,4 @@
-import { compileCircuit, generateZKey, generateVKey } from "@/lib/circuit-gen/gen";
+import { compileCircuit, generateZKey, generateVKey, installProjectDeps } from "@/lib/circuit-gen/gen";
 import { getFirstPendingEntry, updateState } from "@/lib/models/entry";
 import { generateCodeLibrary } from "@/lib/code-gen/gen"
 import { Entry } from "@prisma/client";
@@ -21,9 +21,12 @@ async function generateCiruitService() {
         const circuitName = (entry.parameters as any)['name'];
         try {
             await generateCodeLibrary(entry.parameters, entry.slug, entry.status)
-            const promise = compileCircuit(entry.slug, circuitName, true);
-            updateState(entry.id, "COMPILING");
+            updateState(entry.id, "INSTALLING");
+            const promise = installProjectDeps(entry.slug);
             await promise.then(() => {
+                updateState(entry.id, "COMPILING");
+                return compileCircuit(entry.slug, circuitName, true);
+            }).then(() => {
                 updateState(entry.id, "GENERATING_ZKEY");
                 return generateZKey(entry.slug, circuitName, true);
             }).then(() => {
