@@ -1,24 +1,27 @@
-import { Button } from "./ui/button";
+import { cn } from "@/lib/utils";
 import { DialogHeader, Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "./ui/dialog";
 
 interface SimpleDialogProps {
     trigger: React.ReactNode;
     title: string;
     children: React.ReactNode;
+    wide?: boolean;
 }
 
-export function SimpleDialog({title, children, trigger}: SimpleDialogProps) {
+export function SimpleDialog({title, children, trigger, wide = false}: SimpleDialogProps) {
     return <Dialog>
     <DialogTrigger asChild>
         {trigger}
     </DialogTrigger>
-    <DialogContent  className="overflow-clip">
+    <DialogContent className={cn(wide ? "max-w-[80%]" : "overflow-clip")}>
         <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        <DialogDescription className="overflow-scroll">
+        <div className="overflow-scroll">
             {children}
-        </DialogDescription>
+        </div>
+        {/* <DialogDescription className="overflow-scroll"> */}
+        {/* </DialogDescription> */}
     </DialogContent>
 </Dialog>
 }
