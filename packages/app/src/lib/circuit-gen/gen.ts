@@ -78,7 +78,7 @@ export function generateZKey(circuitSlug: string, circuitName: string, force: bo
         const c = spawn("./node_modules/.bin/snarkjs", ['zkey', 'new', r1csPath, PTAU_PATH, zkeyPath, '-v'], {
             env: {
                 ...process.env,
-                NODE_OPTIONS: '--max-old-space-size=112000'
+                NODE_OPTIONS: '--max-old-space-size=16000'
             }
         });
         c.stdout.on('data', (data) => {
