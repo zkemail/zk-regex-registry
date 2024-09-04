@@ -1,6 +1,7 @@
 import { createContext } from 'react';
 
 export interface ProofStatus {
+  slug: string,
   status: string,
   id: string,
   pollUrl: string,
@@ -39,6 +40,8 @@ interface ZkEmailSDKValues {
         [key: string]: ProofStatus
     }
     generateProofRemotely: (name: string, input: any) => Promise<any>;
+    loadProofsFromStorage: (name: string) => void;
+    deleteProofFromStorage: (id: string) => void;
 }
 
 const defaultValues: ZkEmailSDKValues = {
@@ -57,7 +60,9 @@ const defaultValues: ZkEmailSDKValues = {
     generateProofLocally: async () => { console.log("context not setup");},
 
     proofStatus: {},
-    generateProofRemotely: async () => { console.log("context not setup");}
+    generateProofRemotely: async () => { console.log("context not setup");},
+    loadProofsFromStorage: () => { console.log("context not setup")},
+    deleteProofFromStorage: () => { console.log("context not setup")},
 }
 
 const ZkRegexContext = createContext<ZkEmailSDKValues>(defaultValues)

@@ -4,7 +4,7 @@ import GoogleAuthContext from "./src/contexts/GoogleAuth";
 import ZKEmailSDKContext, { ProofStatus } from "./src/contexts/ZkEmailSDK";
 import useGoogleAuth from "./src/hooks/useGoogleAuth";
 import { fetchEmailList, fetchEmailsRaw, fetchProfile } from "./src/hooks/useGmailClient";
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 // import React from "react";
 import useZkEmailSDK from './src/hooks/useZkEmailSDK';
@@ -29,6 +29,53 @@ function ZkEmailSDKProvider({children, clientId, zkEmailSDKRegistryUrl}: Provide
         const w = new Worker(`data:text/javascript;base64,${encode(js)}`)
         setInputWorkers({...inputWorkers, [name]: w});
       })
+  }
+
+  useEffect(() => {
+    if (Object.keys(proofStatus).length > 0) {
+      console.log("saving proofs", proofStatus);
+      const proofs = localStorage.getItem("proofs");
+      const parsedProofs = proofs ? JSON.parse(proofs) as Record<string, ProofStatus> : {};
+      const newProofs = {...parsedProofs, ...proofStatus};
+      localStorage.setItem("proofs", JSON.stringify(newProofs));
+    }
+  }, [proofStatus]);
+
+  function loadProofsFromStorage(name: string): void {
+    const proofs = localStorage.getItem("proofs");
+    if (proofs) {
+      const parsedProofs = JSON.parse(proofs) as Record<string, ProofStatus>;
+      // filter out proofs that don't belong to the current slug
+      const filteredProofs = Object.entries(parsedProofs)
+        .filter(([_, proof]) => proof.slug === name)
+        .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {}) as Record<string, ProofStatus>;
+      console.log(filteredProofs);
+      setProofStatus(filteredProofs);
+      for (const id of Object.keys(filteredProofs)) {
+        const proof = filteredProofs[id];
+        if (!["COMPLETED", "ERROR"].includes(proof.status)) {
+          poolForProofStatus(name, proof.pollUrl)
+        }
+      }
+    }
+  }
+
+  function deleteProofFromStorage(id: string) {
+    const proofs = localStorage.getItem("proofs");
+    if (proofs) {
+      const parsedProofs = JSON.parse(proofs) as Record<string, ProofStatus>;
+      delete parsedProofs[id];
+      localStorage.setItem("proofs", JSON.stringify(parsedProofs));
+    }
+    setProofStatus((prev) => {
+      const newProofStatus = {...prev};
+      delete newProofStatus[id];
+      return newProofStatus;
+    });
+  }
+
+  function saveProofStatus(name: string, data: ProofStatus) {
+    setProofStatus((prev) => ({...prev, [data.id]:{...data, slug: name}}));
   }
 
   async function generateInputFromEmail(name: string, email: string, externalInputs: Record<string, string>) {
@@ -58,19 +105,19 @@ function ZkEmailSDKProvider({children, clientId, zkEmailSDKRegistryUrl}: Provide
       }
     });
     const data = await res.json();
-    setProofStatus((prev) => ({...prev, [data.id]:data}));
+    
     if (data.pollUrl) {
-      poolForProofStatus(data.pollUrl)
+      poolForProofStatus(name, data.pollUrl)
     }
     return data;
   }
 
-  async function poolForProofStatus(url: string) {
+  async function poolForProofStatus(name: string, url: string) {
     const res = await fetch(zkEmailSDKRegistryUrl + url);
     const data = await res.json();
-    setProofStatus((prev) => ({...prev, [data.id]:data}));
+    saveProofStatus(name, data);
     if (data.status !== 'COMPLETED') {
-      setTimeout(() => poolForProofStatus(url), 5000);
+      setTimeout(() => poolForProofStatus(name, url), 5000);
     } 
   }
 
@@ -84,6 +131,7 @@ function ZkEmailSDKProvider({children, clientId, zkEmailSDKRegistryUrl}: Provide
       delete inputWorkers[name];
     },
     generateInputFromEmail,
+    loadProofsFromStorage,
     customProofGenWorkerSrc: {},
     proofWorkers: {},
     createProofWorker: function (_name: string): void {
@@ -97,6 +145,7 @@ function ZkEmailSDKProvider({children, clientId, zkEmailSDKRegistryUrl}: Provide
     },
     proofStatus,
     generateProofRemotely,
+    deleteProofFromStorage,
   } 
 
 
