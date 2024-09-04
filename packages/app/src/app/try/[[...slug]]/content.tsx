@@ -5,7 +5,7 @@ import { Entry } from "@prisma/client";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { useState, useEffect, FormEvent } from "react";
 import { useGoogleAuth, fetchEmailList, fetchEmailsRaw, useZkEmailSDK } from "@zk-email/zk-email-sdk";
-import { Check, Trash, X } from 'lucide-react';
+import { Check, LoaderCircle, Trash, X } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import PostalMime from 'postal-mime';
@@ -16,6 +16,7 @@ import '@rainbow-me/rainbowkit/styles.css';
 import { circuitOutputToArgs, parseOutput } from "@/lib/contract";
 import { SimpleDialog } from "@/components/simple-dialog";
 import { calculateSignalLength } from "@/lib/code-gen/utils";
+import { redeployContracts } from "./action";
 
 export interface ContentProps {
     entry: Entry
@@ -55,6 +56,7 @@ export function PageContent(props: ContentProps) {
     const [messages, setMessages] = useState<Email[]>([]);
     const [signalLength, setSignalLength] = useState<number>(1);
     const [externalInputs, setExternalInputs] = useState<Record<string,string>>({});
+    const [isRedeploying, setIsRedeploying] = useState<boolean>(false);
 
     useEffect(() => {
         if (!inputWorkers[entry.slug]) {
@@ -130,6 +132,12 @@ export function PageContent(props: ContentProps) {
             error,
             body,
         }
+    }
+
+    function redeployContractsHandler() {
+        redeployContracts(entry);
+        setIsRedeploying(true);
+        setTimeout(() => {window.location.reload()}, 30000);
     }
 
     function displayGoogleLoginButton(isGoogleAuthed: boolean) {
@@ -389,7 +397,7 @@ export function PageContent(props: ContentProps) {
                                     Step 4: Verify proofs on-chain (Sepolia)
                                 </h4>
                                 <div className="flex flex-row items-center">
-                                    <p><b className="font-extrabold">Verification Contract:</b> {entry.contractAddress}</p>
+                                    <p><b className="font-extrabold">Verification Contract:</b> {entry.contractAddress || "Not deployed yet"}</p>
                                     <SimpleDialog title="Verification Contract" trigger={<Button className="font-extrabold" variant="link">View ABI</Button>}>
                                         <code className="text-xs">
                                             <pre>
@@ -425,8 +433,11 @@ export function PageContent(props: ContentProps) {
                                         </code>
                                     </SimpleDialog>
                                 </div>
-                                <p><b className="font-bold">Groth16 Contract:</b> {entry.verifierContractAddress}</p>
-                                <ConnectButton />
+                                <p><b className="font-bold">Groth16 Contract:</b> {entry.verifierContractAddress || "Not deployed yet"}</p>
+                                <div className="flex flex-row">
+                                    <ConnectButton />
+                                    <Button className="ml-4" variant="outline" onClick={redeployContractsHandler}>{isRedeploying ? <><LoaderCircle className="animate-spin" /> Reloading in ~30s...</> : "Redeploy Contracts"}</Button>
+                                </div>
                                 {displayProofJobsToBeVerified()}
                                 {hash && <p>Transaction hash: {hash}</p>}
                                 {isConfirming && <div>Waiting for confirmation...</div>}
