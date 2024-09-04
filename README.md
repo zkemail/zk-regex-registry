@@ -31,6 +31,11 @@ root
 
 ## Getting Started
 
+Install dependencies required for building circuits
+
+1. circom - [installation instructions](https://docs.circom.io/getting-started/installation/)
+2. zk-regex - [installation instructions](https://github.com/zkemail/zk-regex)
+
 Copy and rename the environment variables
 ```bash
 cp .env.local.exmaple .env.local
@@ -48,6 +53,15 @@ NEXT_PUBLIC_GOOGLE_CLIENT_ID=
 GENERATED_OUTPUT_DIR=
 # Path to the ptau file used for circuit generation
 PTAU_PATH=
+
+# Private key for deploying contracts
+PRIVATE_KEY=
+# RPC URL for deploying contracts
+RPC_URL=
+# DKIM Registry address
+DKIM_REGISTRY=
+# Chain ID
+CHAIN_ID=
 ```
 
 Run the database and seed it
