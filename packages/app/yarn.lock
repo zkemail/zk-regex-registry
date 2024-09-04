@@ -2467,10 +2467,10 @@
     psl "^1.9.0"
     snarkjs "https://github.com/sampritipanda/snarkjs.git#fef81fc51d17a734637555c6edbd585ecda02d9e"
 
-"@zk-email/zk-email-sdk@^1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@zk-email/zk-email-sdk/-/zk-email-sdk-1.0.3.tgz#ba263b43bec8b92d83aec069d248c304c279489b"
-  integrity sha512-Er2PRnqslONgiinPDbK5yjBZplG6dIv7P7MOdXPNIVDpZgOvfUb7ndxTWUqXJ1A3208ezodVfW4fImqYuuCAqA==
+"@zk-email/zk-email-sdk@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@zk-email/zk-email-sdk/-/zk-email-sdk-1.0.5.tgz#2ae9724653c652b87d0d9b62fcf12dc0a15ac545"
+  integrity sha512-4920Au1F5PC//tnbXMoFDNwxGuHPpHyhJeZDwnlrHzYy+5U/AVqdRrZZNgNvkeAeXKKel0yRehkzIVDjGYE9XQ==
   dependencies:
     "@react-oauth/google" "^0.12.1"
     js-base64 "^3.7.7"

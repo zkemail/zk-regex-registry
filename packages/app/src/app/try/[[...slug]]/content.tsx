@@ -5,7 +5,7 @@ import { Entry } from "@prisma/client";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { useState, useEffect, FormEvent } from "react";
 import { useGoogleAuth, fetchEmailList, fetchEmailsRaw, useZkEmailSDK } from "@zk-email/zk-email-sdk";
-import { Check, X } from 'lucide-react';
+import { Check, Trash, X } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import PostalMime from 'postal-mime';
@@ -46,6 +46,8 @@ export function PageContent(props: ContentProps) {
         generateProofRemotely,
         proofStatus,
         inputWorkers,
+        loadProofsFromStorage,
+        deleteProofFromStorage
     } = useZkEmailSDK();
 
     const account = useAccount();
@@ -91,6 +93,7 @@ export function PageContent(props: ContentProps) {
                 [input.name]: "",
             });
         }
+        loadProofsFromStorage(entry.slug);
     }, [])
     const { data: hash, error, isPending, writeContract } = useWriteContract();
 
@@ -204,6 +207,7 @@ export function PageContent(props: ContentProps) {
             return (<Table>
             <TableHeader>
                 <TableRow>
+                    <TableHead className="w-[20px]"></TableHead>
                     <TableHead className="w-[100px]">Job ID</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Estimated Time Left</TableHead>
@@ -212,6 +216,7 @@ export function PageContent(props: ContentProps) {
             <TableBody>
                 {Object.keys(proofStatus).map((id) => (
                     <TableRow key={id}>
+                        <TableCell><Trash className="text-red-500" onClick={() => deleteProofFromStorage(id)} /></TableCell>
                         <TableCell className="font-medium">{proofStatus[id].id}</TableCell>
                         <TableCell>{proofStatus[id].status}</TableCell>
                         <TableCell>{proofStatus[id].estimatedTimeLeft.toFixed(1)}</TableCell>
