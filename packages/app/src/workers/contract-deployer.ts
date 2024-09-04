@@ -8,20 +8,32 @@ async function startContractDeployerService() {
         await new Promise(resolve => setTimeout(resolve, 1000));
         const entry = await getFirstUndeployedEntry();
         if (entry) {
-            await generateCodeLibrary(entry.parameters, entry.slug, entry.status);
-            await buildContract(entry);
-            await deployContract(entry);
-            await addDkimEntry(entry);
-            const addresses = await readContractAddresses(entry);
-            await prisma.entry.update({
-                where: {
-                    id: entry.id
-                },
-                data: {
-                    verifierContractAddress: addresses.verifier,
-                    contractAddress: addresses.contract
-                }
-            });
+            try {
+                await generateCodeLibrary(entry.parameters, entry.slug, entry.status);
+                await buildContract(entry);
+                await deployContract(entry);
+                await addDkimEntry(entry);
+                const addresses = await readContractAddresses(entry);
+                await prisma.entry.update({
+                    where: {
+                        id: entry.id
+                    },
+                    data: {
+                        verifierContractAddress: addresses.verifier,
+                        contractAddress: addresses.contract
+                    }
+                });
+            } catch (error) {
+                await prisma.entry.update({
+                    where: {
+                        id: entry.id
+                    },
+                    data: {
+                        verifierContractAddress: "error:" + (error as Error).toString(),
+                        contractAddress: "error:" + (error as Error).toString()
+                    }
+                });
+            }
         }
     }
 }
