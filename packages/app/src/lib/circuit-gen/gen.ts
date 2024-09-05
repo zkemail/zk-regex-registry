@@ -12,7 +12,6 @@ export function circuitCompilationLogPath(circuitSlug: string): string {
 }
 
 export function installProjectDeps(circuitSlug: string): Promise<void> {
-    const circuitLogPath = circuitCompilationLogPath(circuitSlug);
     return new Promise<void>((resolve, reject) => {
         const c = spawn("yarn", ["install"], {
             cwd: path.join(CODE_OUT_DIR, circuitSlug)
@@ -20,7 +19,6 @@ export function installProjectDeps(circuitSlug: string): Promise<void> {
         // on error
         c.stderr.on('data', (data) => {
             process.stderr.write(`stdout: ${data}`);
-            log(circuitLogPath, data, 'circuit-install-deps');
         });
         c.on('exit', (code) => {
             if (code === 0) {
