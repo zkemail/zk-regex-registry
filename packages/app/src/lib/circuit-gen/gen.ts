@@ -32,9 +32,6 @@ export function installProjectDeps(circuitSlug: string): Promise<void> {
 
 export function compileCircuit(circuitSlug: string, circuitName: string, force: boolean): Promise<void> {
     const circuitLogPath = circuitCompilationLogPath(circuitSlug);
-    console.log(`Compiling circuit for ${circuitSlug} with name ${circuitName} and force ${force}`);
-    log(circuitLogPath, `Compiling circuit for ${circuitSlug} with name ${circuitName} and force ${force}`, 'circuit-compile');
-
     // Make sure output directory exists, delete if exist
     const circuitDirectory = path.join(CIRCUIT_OUT_DIR, circuitSlug);
     if (fs.existsSync(circuitDirectory)) {
@@ -44,6 +41,10 @@ export function compileCircuit(circuitSlug: string, circuitName: string, force: 
         }
     }
     fs.mkdirSync(circuitDirectory, { recursive: true })
+
+    console.log(`Compiling circuit for ${circuitSlug} with name ${circuitName} and force ${force}`);
+    log(circuitLogPath, `Compiling circuit for ${circuitSlug} with name ${circuitName} and force ${force}`, 'circuit-compile');
+
     const circuitPath = path.join(CODE_OUT_DIR, circuitSlug, "circuit", `${circuitName}.circom`)
     fs.writeFileSync(circuitLogPath, "");
     const nodeModulesPath = path.join(CODE_OUT_DIR, circuitSlug, "node_modules");
