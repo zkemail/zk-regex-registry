@@ -21,7 +21,7 @@ contract Contract is Ownable {
 <% let signal_size = 1 + emailBodyMaxLength; values.forEach(function(value) { const packSize = Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0) %>
     uint16 public constant <%- value.name %>_len = <%- packSize %>;<% signal_size += packSize;}) %>
 
-<% externalInputs.forEach(function(value) { const packSize = Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0) %>
+<% externalInputs.filter(v => v.name !== "mask").forEach(function(value) { const packSize = Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0) %>
     uint16 public constant <%- value.name %>_len = <%- packSize %>;<% signal_size += packSize;}) %>
 
     // ============================
@@ -47,7 +47,7 @@ contract Contract is Ownable {
         string memory <%- value.name %>_string = StringUtils.convertPackedBytesToString(packed_<%- value.name %>, pack_size * <%- value.name %>_len, pack_size); 
 <% const packSize = Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0); cur_idx += packSize;}) %>
 
-<% externalInputs.forEach(function(value) { %>
+<% externalInputs.filter(v => v.name !== "mask").forEach(function(value) { %>
         // unpack <%- value.name %>
         uint[] memory packed_<%- value.name %> = new uint[](<%- value.name %>_len);
         for (uint i = 0; i < <%- value.name %>_len; i++) {

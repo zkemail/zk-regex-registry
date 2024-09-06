@@ -15,3 +15,4 @@ fi
 cd $input_dir
 yarn install
 forge script Deploy.s.sol --rpc-url $RPC_URL --broadcast --chain-id $CHAIN_ID
+rm -rf node_modules
