@@ -1,4 +1,4 @@
-import { compileCircuit, generateZKey, generateVKey, installProjectDeps } from "@/lib/circuit-gen/gen";
+import { compileCircuit, generateZKey, generateVKey, installProjectDeps, compileCircuitModal } from "@/lib/circuit-gen/gen";
 import { getFirstPendingEntry, updateState } from "@/lib/models/entry";
 import { generateCodeLibrary } from "@/lib/code-gen/gen"
 import { Entry } from "@prisma/client";
@@ -19,6 +19,12 @@ async function generateCiruitService() {
         }
 
         const circuitName = (entry.parameters as any)['name'];
+        try {
+            // Use modal to compile circuit
+            compileCircuitModal(entry.slug, circuitName, true);
+        } catch (e) {
+            console.error("Failed to compile circuit using modalp", e)
+        }
         try {
             await generateCodeLibrary(entry.parameters, entry.slug, entry.status)
             updateState(entry.id, "INSTALLING");

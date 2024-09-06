@@ -19,7 +19,6 @@ path = os.environ.get("PROJECT_PATH", "")
 
 @app.local_entrypoint()
 def main():
-    print(os.environ)
     slug = os.environ["PROJECT_SLUG"]
     compile_circuit.remote(slug)
 
@@ -43,5 +42,5 @@ def compile_circuit(slug: str):
     circuitName = circuitPath.split("/")[-1].split(".")[0]
     subprocess.run(["mkdir", "-p", f"/temp_output/{slug}"], check=True)
     subprocess.run(["circom", circuitPath, "--r1cs", "--wasm", "-o", f"/temp_output/{slug}", "-l", "/project/node_modules"], check=True)
-    subprocess.run(f"NODE_OPTIONS='--max-old-space-size=16000' snarkjs zkey new /output/circuit/{slug}/{circuitName}.r1cs /powersOfTau28_hez_final_23.ptau /temp_output/{slug}/{circuitName}.zkey -v", check=True, shell=True)
+    subprocess.run(f"NODE_OPTIONS='--max-old-space-size=16000' snarkjs zkey new /temp_output/{slug}/{circuitName}.r1cs /powersOfTau28_hez_final_23.ptau /temp_output/{slug}/{circuitName}.zkey -v", check=True, shell=True)
     subprocess.run([f"cp -R /temp_output/* /output/circuit/"], check=True, shell=True)

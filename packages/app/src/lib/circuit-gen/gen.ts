@@ -76,6 +76,55 @@ export function compileCircuit(circuitSlug: string, circuitName: string, force: 
     });
 }
 
+export function compileCircuitModal(circuitSlug: string, circuitName: string, force: boolean): Promise<void> {
+    const circuitLogPath = circuitCompilationLogPath(circuitSlug);
+    const circuitDirectory = path.join(CIRCUIT_OUT_DIR, circuitSlug);
+
+    if (fs.existsSync(circuitDirectory) && !force) {
+        console.log("Skipping compilation");
+        return Promise.resolve();
+    }
+
+    fs.mkdirSync(circuitDirectory, { recursive: true });
+
+    console.log(`Compiling circuit for ${circuitSlug} with name ${circuitName} and force ${force}`);
+    log(circuitLogPath, `Compiling circuit for ${circuitSlug} with name ${circuitName} and force ${force}`, 'circuit-compile');
+
+    fs.writeFileSync(circuitLogPath, "");
+
+    return new Promise<void>((resolve, reject) => {
+        const c = spawn("python", ["-m", "modal", "run", "--detach", "modal/compile-circuit.py"], {
+            env: {
+                ...process.env,
+                PROJECT_SLUG: circuitSlug,
+                PROJECT_PATH: path.join(process.cwd(), CODE_OUT_DIR, circuitSlug)
+            }
+        });
+
+        c.stdout.on('data', (data) => {
+            process.stdout.write(`stdout: ${data}`);
+            log(circuitLogPath, data, 'circuit-compile');
+        });
+
+        c.stderr.on('data', (data) => {
+            process.stderr.write(`stderr: ${data}`);
+            log(circuitLogPath, data, 'circuit-compile');
+        });
+
+        c.on('exit', (code, signal) => {
+            if (code === 0) {
+                console.log(`Compiled circuit for ${circuitSlug} with name ${circuitName}`);
+                log(circuitLogPath, `Compiled circuit for ${circuitSlug} with name ${circuitName}`, 'circuit-compile');
+                resolve();
+            } else {
+                console.log(`Process exited with code ${code}`);
+                log(circuitLogPath, `Process exited with code ${code}`, 'circuit-compile');
+                reject();
+            }
+        });
+    });
+}
+
 export function generateZKey(circuitSlug: string, circuitName: string, force: boolean): Promise<void> {
     const zkeyLogPath = path.join(CIRCUIT_OUT_DIR, circuitSlug, circuitName + '_zkey.log');
     // Make sure output directory exists, delete if exist
