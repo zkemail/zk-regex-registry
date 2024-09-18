@@ -79,7 +79,15 @@ export default async function Home({searchParams: {page, query}}: {searchParams:
                 <PaginationEllipsis />
               </PaginationItem> */}
               <PaginationItem>
-                <PaginationNext href="#" />
+                <PaginationNext
+                  href={
+                    pageNumber < Math.ceil(count / PAGE_LIMIT)
+                      ? `?page=${pageNumber + 1}${
+                          query ? `&query=${query}` : ""
+                        }`
+                      : "#"
+                  }
+                />
               </PaginationItem>
             </PaginationContent>
           </Pagination>
