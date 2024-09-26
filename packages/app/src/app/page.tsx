@@ -47,9 +47,11 @@ export default async function Home({searchParams: {page, query}}: {searchParams:
               </p>
             </div>
             <div>
-              <Button className="gap-2 mr-4" variant="outline">
-                Any questions? Reach out <Mail className="w-4 h-4" />
-              </Button>
+              <a href="https://t.me/zkemail" target="_blank" rel="noopener noreferrer">
+                <Button className="gap-2 mr-4" variant="outline">
+                  Any questions? Reach out <Mail className="w-4 h-4" />
+                </Button>
+              </a>
               <a href="/submit" className="gap-2"><Button>Submit a new pattern</Button></a>
             </div>
           </div>
