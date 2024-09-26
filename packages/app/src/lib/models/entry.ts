@@ -57,6 +57,11 @@ export const getFirstPendingEntry = async () => {
     return entry
 }
 
+export const getRandomPendingEntry = async () => {
+    const entries = await prisma.entry.findMany({where: {status: "PENDING"}, orderBy: {createdAt: 'asc'}});
+    return entries[Math.floor(Math.random() * entries.length)];
+}
+
 export const getFirstUndeployedEntry = async () => {
     const entry = await prisma.entry.findFirst({where: {status: "COMPLETED", verifierContractAddress: null}, orderBy: {createdAt: 'asc'}});
     return entry

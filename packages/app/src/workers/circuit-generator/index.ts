@@ -1,5 +1,5 @@
 import { compileCircuit, generateZKey, generateVKey, installProjectDeps, compileCircuitModal } from "@/lib/circuit-gen/gen";
-import { getFirstPendingEntry, updateState } from "@/lib/models/entry";
+import { getFirstPendingEntry, getRandomPendingEntry, updateState } from "@/lib/models/entry";
 import { generateCodeLibrary } from "@/lib/code-gen/gen"
 import { Entry } from "@prisma/client";
 
@@ -8,7 +8,7 @@ async function generateCiruitService() {
         let entry: Entry;
         try {
             await new Promise(resolve => setTimeout(resolve, 1000));
-            const pendingEntry = await getFirstPendingEntry();
+            const pendingEntry = await getRandomPendingEntry();
             if (!pendingEntry) {
                 continue
             }
