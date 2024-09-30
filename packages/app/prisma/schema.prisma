@@ -26,6 +26,7 @@ model Entry {
   emailQuery  String @default("")
   verifierContractAddress String? 
   contractAddress String? 
+  withModal     Boolean    @default(false)
 
   @@map("entries")
 }

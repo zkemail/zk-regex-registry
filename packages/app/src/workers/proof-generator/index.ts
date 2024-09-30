@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { generateProof } from "@/lib/proof-gen";
+import { generateProof, generateProofModal } from "@/lib/proof-gen";
 
 (async () => {
     console.log("Starting proof generation service");
@@ -38,19 +38,35 @@ import { generateProof } from "@/lib/proof-gen";
                 }
             })
             // Generate proof
-            await generateProof(jobWithEntry.entry, job);
+            if (jobWithEntry.entry.withModal) {
+                (async () => {
+                    await generateProofModal(jobWithEntry.entry, job);
+                    await prisma.proofJob.update({
+                        where: {
+                            id: job.id
+                        },
+                        data: {
+                            status: "COMPLETED",
+                            circuitInput: {},
+                            timeToComplete: (Date.now() - job.updatedAt.getTime())/1000
+                        }
+                    })
+                })()
+            } else {
+                await generateProof(jobWithEntry.entry, job);
+                // Update job status and delete circuit input
+                await prisma.proofJob.update({
+                    where: {
+                        id: job.id
+                    },
+                    data: {
+                        status: "COMPLETED",
+                        circuitInput: {},
+                        timeToComplete: (Date.now() - job.updatedAt.getTime())/1000
+                    }
+                })
+            }
 
-            // Update job status and delete circuit input
-            await prisma.proofJob.update({
-                where: {
-                    id: job.id
-                },
-                data: {
-                    status: "COMPLETED",
-                    circuitInput: {},
-                    timeToComplete: (Date.now() - job.updatedAt.getTime())/1000
-                }
-            })
         } catch (e) {
             console.error(e)
             await prisma.proofJob.update({

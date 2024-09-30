@@ -36,6 +36,59 @@ export async function queueProofJob(entry: Entry, circuitInput: any, apiKey: str
     }
 }
 
+// Generate using modal
+export async function generateProofModal(entry: Entry, job: ProofJob): Promise<void> {
+    const circuitName = (entry.parameters as any)["name"];
+    const circuitSlug = entry.slug;
+
+    // Generate circuit input
+    const proofDir = `${CIRCUIT_OUT_DIR}/${entry.slug}/proofs/${job.id}`;
+    if (!fs.existsSync(proofDir)) {
+        fs.mkdirSync(proofDir, { recursive: true });
+    }
+
+    // Write the circuit inputs to a file
+    await new Promise<void>((resolve, reject) => {
+        fs.writeFile(`${proofDir}/input.json`, JSON.stringify(job.circuitInput), (err) => {
+            if (err) {
+                reject(err);
+            }
+            resolve();
+        });
+    });
+
+    // Use modal to generate proof
+    return new Promise<void>((resolve, reject) => {
+        const c = spawn("python", ["-m", "modal", "run", "modal/create-proof.py"], {
+            env: {
+                ...process.env,
+                PROJECT_SLUG: circuitSlug,
+                CIRCUIT_NAME: circuitName,
+                PROOF_PATH: proofDir
+            }
+        });
+
+        c.stdout.on('data', (data) => {
+            process.stdout.write(`stdout: ${data}`);
+        });
+
+        c.stderr.on('data', (data) => {
+            process.stderr.write(`stderr: ${data}`);
+        });
+
+        c.on('exit', (code, signal) => {
+            if (code === 0) {
+                console.log(`Generated proof for ${circuitSlug} with name ${circuitName}`);
+                resolve();
+            } else {
+                console.log(`Process exited with code ${code}`);
+                reject(new Error(`Proof generation failed with code ${code}`));
+            }
+        });
+    });
+}
+
+
 export async function generateProof(entry: Entry, job: ProofJob) {
 
     const circuitName = (entry.parameters as any)["name"];

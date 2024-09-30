@@ -48,8 +48,8 @@ export const getEntryCount = async () => {
     return count
 }
 
-export const updateState = async (id: string, state: string) => {
-    await prisma.entry.update({where: {id}, data: {status: state}});
+export const updateState = async (id: string, state: string, withModal: boolean = false) => {
+    await prisma.entry.update({where: {id}, data: {status: state, withModal: withModal}});
 }
 
 export const getFirstPendingEntry = async () => {
