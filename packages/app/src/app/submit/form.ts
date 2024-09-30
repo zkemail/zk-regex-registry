@@ -24,7 +24,9 @@ export const formSchema = z.object({
         ignoreBodyHashCheck: z.boolean(),
         enableMasking: z.boolean(),
         shaPrecomputeSelector: z.string(),
-        senderDomain: z.string(),
+        senderDomain: z.string().refine(value => !value.includes('@'), {
+            message: "Sender domain should not contain '@' symbol, only the domain",
+        }),
         dkimSelector: z.string().optional(),
         emailBodyMaxLength: z.coerce.number().transform((n, ctx) => {
             if (n % 64 !== 0) {
@@ -33,7 +35,18 @@ export const formSchema = z.object({
             return n;
         }),
         values: z.array(z.object({
-            name: z.string().min(1),
+            name: z.string().min(1).refine((value) => !value.includes(' '), {
+                message: "Name cannot contain spaces",
+            }).transform((value, ctx) => {
+                if (value.includes(' ')) {
+                    ctx.addIssue({
+                        code: 'custom',
+                        message: 'Name cannot contain spaces',
+                    });
+                    return z.NEVER;
+                }
+                return value;
+            }),
             maxLength: z.coerce.number().positive().default(64),
             regex: z.string().optional(),
             prefixRegex: z.string().optional(),
@@ -62,6 +75,7 @@ export const formSchema = z.object({
                     ctx.addIssue( { code: 'custom', message: (e as Error).message } )
                     return z.NEVER
                 }
+                
             }).optional(),
         })),
         externalInputs: z.array(z.object({
