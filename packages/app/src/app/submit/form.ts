@@ -35,15 +35,13 @@ export const formSchema = z.object({
             return n;
         }),
         values: z.array(z.object({
-            name: z.string().min(1).refine((value) => !value.includes(' '), {
-                message: "Name cannot contain spaces",
-            }).transform((value, ctx) => {
+            name: z.string().min(1).transform((value, ctx) => {
                 if (value.includes(' ')) {
                     ctx.addIssue({
                         code: 'custom',
-                        message: 'Name cannot contain spaces',
+                        message: 'Warning: Name contains spaces. They will be replaced with underscores.',
                     });
-                    return z.NEVER;
+                    return value.replace(/ /g, '_');
                 }
                 return value;
             }),
