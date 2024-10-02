@@ -17,7 +17,7 @@ def main():
     compile_circuit.remote(slug)
 
 @app.function(
-    timeout=3600,
+    timeout=18000,
     image=base_image,
     volumes={
         "/output": modal.CloudBucketMount(
