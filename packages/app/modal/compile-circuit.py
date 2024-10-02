@@ -3,19 +3,13 @@ import subprocess
 import os
 app = modal.App()
 
-# dockerfile_image = modal.Image.from_dockerfile(
-#     "Dockerfile", 
-#     context_mount=modal.Mount.from_local_dir(
-#         local_path=".",
-#         remote_path=".",
-#     ),)
-
 base_image = modal.Image.from_registry("javiersuweijie/zk-email-sdk-base:0.0.1-alpha.2", add_python="3.11")
 secret = modal.Secret.from_name(
-    "r2-secret",
-    required_keys=["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]
+    "google-storage",
+    required_keys=["GOOGLE_ACCESS_KEY_ID", "GOOGLE_ACCESS_KEY_SECRET"]
 )
 path = os.environ.get("PROJECT_PATH", "")
+bucket_name = os.environ.get("BUCKET_NAME", "")
 
 @app.local_entrypoint()
 def main():
@@ -27,8 +21,8 @@ def main():
     image=base_image,
     volumes={
         "/output": modal.CloudBucketMount(
-            bucket_name="zkemail-sdk-dev",
-            bucket_endpoint_url="https://4d4b50e9f5680d7b604782701f84b71c.r2.cloudflarestorage.com",
+            bucket_name=bucket_name,
+            bucket_endpoint_url="https://storage.googleapis.com",
             secret=secret,
             read_only=False
         )
