@@ -5,7 +5,7 @@ export async function generateCircuitInputs(rawEmail, inputs) {
         ignoreBodyHashCheck: <%- ignoreBodyHashCheck %>,
         maxBodyLength: <%- ignoreBodyHashCheck ? 0 : emailBodyMaxLength %>,
         maxHeaderLength: 1024,
-        shaPrecomputeSelector: "<%- shaPrecomputeSelector %>",
+        shaPrecomputeSelector: "<%- shaPrecomputeSelector.replaceAll('"', '\\\"') %>",
     });
 
     const emailBodyString = circuitInputs.emailBody ? Buffer.from(circuitInputs.emailBody.map(Number)).toString('ascii') : null;
