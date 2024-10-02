@@ -59,7 +59,7 @@ export async function generateProofModal(entry: Entry, job: ProofJob): Promise<v
 
     // Use modal to generate proof
     return new Promise<void>((resolve, reject) => {
-        const c = spawn("python", ["-m", "modal", "run", "modal/create-proof.py"], {
+        const c = spawn("python", ["-m", "modal", "run", "modal/create-proof-gpu.py"], {
             env: {
                 ...process.env,
                 PROJECT_SLUG: circuitSlug,

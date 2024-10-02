@@ -4,7 +4,7 @@ import os
 import sys
 app = modal.App()
 
-base_image = modal.Image.from_registry("node:bullseye-slim", add_python="3.11").run_commands(["npm install -g snarkjs"])
+base_image = modal.Image.from_registry("javiersuweijie/prover-gpu:0.0.1-alpha.0")
 secret = modal.Secret.from_name(
     "google-storage",
     required_keys=["GOOGLE_ACCESS_KEY_ID", "GOOGLE_ACCESS_KEY_SECRET"]
@@ -27,6 +27,8 @@ def main():
 @app.function(
     timeout=3600,
     image=base_image,
+    cpu=16,
+    gpu="any",
     volumes={
         "/output": modal.CloudBucketMount(
             bucket_name=bucket_name,
@@ -39,7 +41,7 @@ def main():
     )
 def prove(slug: str, circuitName: str):
     subprocess.run(["node", f"/output/circuit/{slug}/{circuitName}_js/generate_witness.js", f"/output/circuit/{slug}/{circuitName}_js/{circuitName}.wasm", f"/proof/input.json", f"/proof/output.wtns"], check=True)
-    subprocess.run(["snarkjs", "groth16", "prove", f"/output/circuit/{slug}/{circuitName}.zkey", "/proof/output.wtns", "/proof/proof.json", "/proof/public.json"], check=True)
+    subprocess.run(["/rapidsnark/package/bin/prover_cuda", f"/output/circuit/{slug}/{circuitName}.zkey", f"/proof/output.wtns", f"/proof/proof.json", f"/proof/public.json"], check=True)
 
     # read from proof.json and public.json and return them
     with open(f"/proof/proof.json", "r") as f:
