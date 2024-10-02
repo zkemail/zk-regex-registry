@@ -11,20 +11,22 @@ export async function generateCircuitInputs(rawEmail, inputs) {
     const emailBodyString = circuitInputs.emailBody ? Buffer.from(circuitInputs.emailBody.map(Number)).toString('ascii') : null;
     const emailHeaderString = circuitInputs.emailHeader ? Buffer.from(circuitInputs.emailHeader.map(Number)).toString('ascii') : null;
     let regexInputs = {};
-    let match;
     <% values.forEach(function(value) { %>
+    {
     <% if (value.location === "body") { %>
-    match = emailBodyString.match(new RegExp(<%- value.prefixRegex %>))
+        const match = emailBodyString.match(new RegExp(<%- value.prefixRegex %>))
     <% } else { %>
-    match = emailHeaderString.match(new RegExp(<%- value.prefixRegex %>))
+        const match = emailHeaderString.match(new RegExp(<%- value.prefixRegex %>))
     <% } %>
-    if (match) {
-        regexInputs = {
-            ...regexInputs,
-            <%- value.name %>RegexIdx: match.index + match[0].length
+        if (match) {
+            regexInputs = {
+                ...regexInputs,
+                <%- value.name %>RegexIdx: match.index + match[0].length
+            }
+        } else {
+            throw new Error(`Did not find a match for <%- value.name %> in the email sample`)
         }
     }
-    match = null;
     <% }) %>
 
     const packedInputs = {};
