@@ -9,10 +9,10 @@ async function startContractDeployerService() {
         const entry = await getFirstUndeployedEntry();
         if (entry) {
             try {
-                await generateCodeLibrary(entry.parameters, entry.slug, entry.status);
                 if (entry.withModal) {
                     await deployContractWithModal(entry);
                 } else {
+                    await generateCodeLibrary(entry.parameters, entry.slug, entry.status);
                     await deployContract(entry);
                 }
                 await addDkimEntry(entry);
