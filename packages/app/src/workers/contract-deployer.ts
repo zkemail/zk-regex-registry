@@ -1,5 +1,5 @@
 import { generateCodeLibrary } from "@/lib/code-gen/gen";
-import { addDkimEntry, buildContract, deployContract, readContractAddresses } from "@/lib/contract-deploy"
+import { addDkimEntry, buildContract, deployContract, readContractAddresses, deployContractWithModal } from "@/lib/contract-deploy"
 import { getFirstUndeployedEntry } from "@/lib/models/entry"
 import prisma from "@/lib/prisma"
 
@@ -10,8 +10,11 @@ async function startContractDeployerService() {
         if (entry) {
             try {
                 await generateCodeLibrary(entry.parameters, entry.slug, entry.status);
-                await buildContract(entry);
-                await deployContract(entry);
+                if (entry.withModal) {
+                    await deployContractWithModal(entry);
+                } else {
+                    await deployContract(entry);
+                }
                 await addDkimEntry(entry);
                 const addresses = await readContractAddresses(entry);
                 await prisma.entry.update({
