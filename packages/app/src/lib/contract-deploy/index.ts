@@ -39,6 +39,40 @@ export async function deployContract(entry: Entry): Promise<void> {
     })
 }
 
+export async function deployContractWithModal(entry: Entry): Promise<void> {
+    const contractDir = path.join(CODE_OUT_DIR, entry.slug, 'contract');
+
+    // Environment variables needed for deployment
+    const env = {
+        ...process.env,
+        PROJECT_SLUG: entry.slug,
+        CIRCUIT_NAME: (entry.parameters as any).name as string,
+        CONTRACT_PATH: contractDir,
+    };
+
+    return new Promise((resolve, reject) => {
+        const deployer = spawn('python', ['-m', 'modal', 'run', '--detach', 'modal/deploy-contract.py'], { env });
+
+        deployer.stdout.on('data', (data) => {
+            console.log(`stdout: ${data}`);
+        });
+
+        deployer.stderr.on('data', (data) => {
+            console.error(`stderr: ${data}`);
+        });
+
+        deployer.on('close', (code) => {
+            if (code !== 0) {
+                console.error(`Modal deployment process exited with code ${code}`);
+                reject(new Error(`Modal deployment process exited with code ${code}`));
+            } else {
+                console.log('Modal deployment completed successfully');
+                resolve();
+            }
+        });
+    });
+}
+
 export async function buildContract(entry: Entry): Promise<void> {
     const contractOutDir = path.join(CONTRACT_OUT_DIR, entry.slug)
     const contractDir = path.join(CODE_OUT_DIR, entry.slug, 'contract')
@@ -71,7 +105,10 @@ export async function buildContract(entry: Entry): Promise<void> {
 
 export async function readContractAddresses(entry: Entry): Promise<{verifier: string, contract: string}> {
     const contractDir = path.join(CODE_OUT_DIR, entry.slug, 'contract');
-    const logFile = path.join(contractDir, "broadcast", "Deploy.s.sol", CHAIN_ID, "run-latest.json")
+    let logFile = path.join(contractDir, "broadcast", "Deploy.s.sol", CHAIN_ID, "run-latest.json")
+    if (!fs.existsSync(logFile)) {
+        logFile = path.join(contractDir, "contract-deploy.json")
+    }
     const log = JSON.parse(fs.readFileSync(logFile, "utf-8"))
     const result = {
         verifier: "",

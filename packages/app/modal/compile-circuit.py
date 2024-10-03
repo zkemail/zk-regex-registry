@@ -3,7 +3,7 @@ import subprocess
 import os
 app = modal.App()
 
-base_image = modal.Image.from_registry("javiersuweijie/zk-email-sdk-base:0.0.1-alpha.2", add_python="3.11")
+base_image = modal.Image.from_registry("javiersuweijie/zk-email-sdk-base:0.0.1", add_python="3.11")
 secret = modal.Secret.from_name(
     "google-storage",
     required_keys=["GOOGLE_ACCESS_KEY_ID", "GOOGLE_ACCESS_KEY_SECRET"]
