@@ -29,7 +29,7 @@ export const formSchema = z.object({
         }),
         dkimSelector: z.string().optional().refine(
             (value) => {
-              if (value === undefined) return true; // Allow undefined values
+              if (value === undefined || value === "") return true; // Allow undefined values
               return /^[a-zA-Z0-9](?:[a-zA-Z0-9-_]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-_]{0,61}[a-zA-Z0-9])?)*$/.test(value) && value.length <= 253;
             },
             {
