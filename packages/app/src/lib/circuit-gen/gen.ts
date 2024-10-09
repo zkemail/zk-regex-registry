@@ -236,7 +236,7 @@ export async function downloadZkey(circuitSlug: string, circuitName: string): Pr
         keyFilename = process.env.GOOGLE_AUTH_JSON;
     }
     const storage = new Storage({ keyFilename: keyFilename });
-    const destDir = path.join(CIRCUIT_OUT_DIR, circuitSlug, "circuit");
+    const destDir = path.join(CIRCUIT_OUT_DIR, circuitSlug);
     if (!fs.existsSync(destDir)) {
         fs.mkdirSync(destDir, { recursive: true });
     }
