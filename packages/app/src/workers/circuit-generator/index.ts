@@ -1,4 +1,4 @@
-import { compileCircuitModal, downloadZkey } from "@/lib/circuit-gen/gen";
+import { compileCircuitModal, downloadBuiltCircuit, downloadZkey } from "@/lib/circuit-gen/gen";
 import { getRandomPendingEntry, updateState } from "@/lib/models/entry";
 import { generateCodeLibrary } from "@/lib/code-gen/gen"
 import { Entry } from "@prisma/client";
@@ -24,6 +24,7 @@ async function generateCiruitService() {
             await generateCodeLibrary(entry.parameters, entry.slug, entry.status)
             await compileCircuitModal(entry.slug, circuitName, true);
             await downloadZkey(entry.slug, circuitName);
+            await downloadBuiltCircuit(entry.slug, circuitName);
             await updateState(entry.id, "COMPLETED", true);
         } catch (e) {
             console.error("Failed to compile circuit using modal", e)
