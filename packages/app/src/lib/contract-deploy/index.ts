@@ -179,7 +179,7 @@ export async function addDkimEntry(entry: Entry): Promise<void> {
      address: contractAddress,
      abi,
      functionName: 'setDKIMPublicKeyHash',
-     args: [domain, bytesToHex(toBytes(hashedKey))]
+     args: [domain, bytesToHex(toBytes(hashedKey), {size:32})]
    });
 
    console.log(`Transaction sent: ${hash}`);
