@@ -251,3 +251,31 @@ export async function downloadZkey(circuitSlug: string, circuitName: string): Pr
     // Downloads the file
     await storage.bucket(bucketName).file(fileName).download(options);
 }
+
+export async function downloadBuiltCircuit(circuitSlug: string, circuitName: string): Promise<void> {
+    let keyFilename;
+    if (process.env.GOOGLE_AUTH_JSON) {
+        keyFilename = process.env.GOOGLE_AUTH_JSON;
+    }
+    const storage = new Storage({ keyFilename: keyFilename });
+    const destDir = path.join(CODE_OUT_DIR, circuitSlug, "circuit");
+    if (!fs.existsSync(destDir)) {
+        fs.mkdirSync(destDir, { recursive: true });
+    }
+    if (!process.env.BUCKET_NAME) {
+        throw new Error("BUCKET_NAME is not set");
+    }
+    const bucketName = process.env.BUCKET_NAME;
+
+    const filesToDownload = [`${circuitName}.wasm`, "generate_witness.js", "witness_calculator.js"];
+    let promises = [];
+    for (const file of filesToDownload) {
+        const options = {
+            destination: path.join(destDir, file)
+        };
+        const fileName = `circuit/${circuitSlug}/${circuitName}_js/${file}`;
+        // Downloads the file
+        promises.push(storage.bucket(bucketName).file(fileName).download(options));
+    }
+    await Promise.all(promises);
+}
