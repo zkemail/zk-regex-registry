@@ -67,7 +67,8 @@ export const generateCodeLibrary = async (parameters: any, outputName: string, s
         promises.push(generateSolidityVerifier(circuitOutputDir, outputDir, outputName, parameters.name, logPath));
     }
     await Promise.all(promises);
-    return await zipDirectory(path.join(outputDir, outputName), path.join(outputDir, `${outputName}-example.zip`))
+    const zipFile = path.join(outputDir, `${outputName}-example.zip`);
+    return await zipDirectory(path.join(outputDir, outputName), zipFile)
 }
 
 

@@ -79,6 +79,7 @@ export const Item = (props: {entry: Entry}) => {
         <div className="w-full mt-2">
             <a href={"/try/"+entry.slug}><Button className="mr-2" disabled={entry.status !== "COMPLETED"}>Try it out</Button></a>
             <a href={"/api/download/"+entry.slug}><Button variant="outline" className="mr-2">Download Example Project</Button></a>
+            {(entry.status === "COMPLETED" && entry.withModal)&& <a href={"/api/download_zkey/"+entry.slug}><Button variant="link" className="mr-2">Download .zkey</Button></a>}
             {/* <Button className="mr-2">Download Circuits Only</Button> */}
             <ItemParameterDialog entry={entry}/>
         </div>
