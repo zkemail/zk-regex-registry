@@ -16,6 +16,7 @@ const MASKING_PROJECT_TYPE = 'zkemail_masking';
 const templatesDir = './src/lib/code-gen/templates'
 const outputDir = path.join(process.env.GENERATED_OUTPUT_DIR || "./output", 'code')
 const circuitOutputDir = path.join('./output', 'circuit')
+const codeOutputDir = path.join('./output', 'code')
 console.log("DIRRR", outputDir);
 const unsafeDirPatterns = ['..', '~'];
 
@@ -63,7 +64,7 @@ export const generateCodeLibrary = async (parameters: any, outputName: string, s
     }
     promises.push(generateCircuitInputsWorker(path.join(outputDir, outputName), outputName));
     if (status === 'COMPLETED') {
-        // promises.push(generateSolidityVerifier(circuitOutputDir, outputDir, outputName, parameters.name, logPath));
+        promises.push(generateSolidityVerifier(circuitOutputDir, outputDir, outputName, parameters.name, logPath));
     }
     await Promise.all(promises);
     return await zipDirectory(path.join(outputDir, outputName), path.join(outputDir, `${outputName}-example.zip`))
@@ -210,10 +211,19 @@ export const generateCircuitInputsWorker = (outDir: string, logPath: string):Pro
 
 export const generateSolidityVerifier = (circuitDir: string, outDir: string, outputName: string, patternName: string, logPath: string): Promise<void> => {
     const inputFile = path.join(circuitDir, outputName, `${patternName}.zkey`)
+    const altInputFile = path.join(codeOutputDir, outputName, "circuit", `${patternName}.zkey`)
+    console.log("inputFile", inputFile);
+    console.log("altInputFile", altInputFile);
+    let file;
+    if (fs.existsSync(altInputFile)) {
+        file = altInputFile;
+    } else {
+        file = inputFile;
+    }
     const outputFile = path.join(outDir, outputName, 'contract', 'src', `verifier.sol`)
     // run snarkjs in a child process
     return new Promise((resolve, reject) => {
-        const snarkjs = spawn('snarkjs', ['zkey', 'export', 'solidityverifier', inputFile, outputFile]);
+        const snarkjs = spawn('snarkjs', ['zkey', 'export', 'solidityverifier', file, outputFile]);
         snarkjs.stdout.on('data', (data) => {
             console.log(`stdout: ${data}`);
             log(logPath, data, "generate-solidity-verifier");

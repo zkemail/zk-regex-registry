@@ -2,6 +2,7 @@ import path from "path"
 import fs from "fs";
 import { spawn } from "child_process";
 import { log } from "../log";
+import { Storage } from "@google-cloud/storage"
 
 const CIRCUIT_OUT_DIR = "./output/circuit"
 const CODE_OUT_DIR = "./output/code"
@@ -227,4 +228,26 @@ export function copyGenerateInputScript(circuitSlug: string, circuitName: string
     }
     fs.copyFileSync(scriptPath, inputScriptPath);
     return Promise.resolve();  
+}
+
+export async function downloadZkey(circuitSlug: string, circuitName: string): Promise<void> {
+    let keyFilename;
+    if (process.env.GOOGLE_AUTH_JSON) {
+        keyFilename = process.env.GOOGLE_AUTH_JSON;
+    }
+    const storage = new Storage({ keyFilename: keyFilename });
+    const destDir = path.join(CODE_OUT_DIR, circuitSlug, "circuit");
+    if (!fs.existsSync(destDir)) {
+        fs.mkdirSync(destDir, { recursive: true });
+    }
+    const options = {
+        destination: path.join(destDir, circuitName + '.zkey')
+    };
+    if (!process.env.BUCKET_NAME) {
+        throw new Error("BUCKET_NAME is not set");
+    }
+    const bucketName = process.env.BUCKET_NAME;
+    const fileName = `circuit/${circuitSlug}/${circuitName}.zkey`;
+    // Downloads the file
+    await storage.bucket(bucketName).file(fileName).download(options);
 }
