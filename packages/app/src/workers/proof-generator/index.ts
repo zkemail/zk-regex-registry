@@ -40,9 +40,9 @@ import { generateProof, generateProofModal } from "@/lib/proof-gen";
             // Generate proof
             if (jobWithEntry.entry.withModal) {
                 (async () => {
-                    await generateProofModal(jobWithEntry.entry, job);
-                    await prisma.proofJob.update({
-                        where: {
+                    generateProofModal(jobWithEntry.entry, job).then(async () => {
+                        await prisma.proofJob.update({
+                            where: {
                             id: job.id
                         },
                         data: {
@@ -50,6 +50,19 @@ import { generateProof, generateProofModal } from "@/lib/proof-gen";
                             circuitInput: {},
                             timeToComplete: (Date.now() - job.updatedAt.getTime())/1000
                         }
+                        })
+                    }).catch(async (e) => {
+                        console.error("ERROR CAUGHT HERE", e);
+                        await prisma.proofJob.update({
+                            where: {
+                                id: job.id
+                            },
+                            data: {
+                                status: "ERROR",
+                                circuitInput: {},
+                                timeToComplete: (Date.now() - job.updatedAt.getTime()) / 1000
+                            }
+                        })
                     })
                 })()
             } else {
