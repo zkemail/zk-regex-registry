@@ -226,6 +226,16 @@ export function PageContent(props: ContentProps) {
         }
     }
 
+    function renderEstimatedTimeLeft(status: string, estimatedTimeLeft: number) {
+        if (status === "COMPLETED") {
+            return "Completed";
+        } else if (estimatedTimeLeft > 0) {
+            return estimatedTimeLeft.toFixed(1) + "s";
+        } else {
+            return "Taking longer than expected...";
+        }
+    }
+
     function displayProofJobs() {
         if (Object.keys(proofStatus).length === 0) {
             return 
@@ -246,7 +256,7 @@ export function PageContent(props: ContentProps) {
                         <TableCell><Trash className="text-red-500" onClick={() => deleteProofFromStorage(id)} /></TableCell>
                         <TableCell className="font-medium">{proofStatus[id].id}</TableCell>
                         <TableCell>{proofStatus[id].status}</TableCell>
-                        <TableCell>{proofStatus[id].estimatedTimeLeft > 0 ? proofStatus[id].estimatedTimeLeft.toFixed(1) + "s" : "Taking longer than expected..."}</TableCell>
+                        <TableCell>{renderEstimatedTimeLeft(proofStatus[id].status, proofStatus[id].estimatedTimeLeft)}</TableCell>
                         <TableCell><SimpleDialog trigger={<Button variant="link">View</Button>} title={"Error logs"} wide={true}>
                             <div>
                                 <pre>{proofLogs[id] || "No logs yet"}</pre>
