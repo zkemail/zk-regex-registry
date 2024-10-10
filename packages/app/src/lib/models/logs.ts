@@ -1,8 +1,18 @@
 "use server";
 
-import { circuitCompilationLogPath } from "../circuit-gen/gen";
-import { codeGenerationLogPath } from "../code-gen/gen";
 import fs from "fs";
+import path from "path";
+
+const CIRCUIT_OUT_DIR = "./output/circuit"
+const outputDir = path.join(process.env.GENERATED_OUTPUT_DIR || "./output", 'code')
+
+function codeGenerationLogPath(circuitSlug: string): string {
+    return path.join(outputDir, circuitSlug, 'code.log');
+}
+
+function circuitCompilationLogPath(circuitSlug: string): string {
+    return path.join(CIRCUIT_OUT_DIR, circuitSlug, 'circuit.log');
+}
 
 export async function getLogs(slug: string) {
     const codeLogPath = codeGenerationLogPath(slug);

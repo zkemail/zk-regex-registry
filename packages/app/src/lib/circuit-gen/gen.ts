@@ -8,7 +8,7 @@ const CIRCUIT_OUT_DIR = "./output/circuit"
 const CODE_OUT_DIR = "./output/code"
 const PTAU_PATH = process.env.PTAU_PATH || ""
 
-export function circuitCompilationLogPath(circuitSlug: string): string {
+function circuitCompilationLogPath(circuitSlug: string): string {
     return path.join(CIRCUIT_OUT_DIR, circuitSlug, 'circuit.log');
 }
 
