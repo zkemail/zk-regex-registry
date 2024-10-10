@@ -2,7 +2,8 @@ import { Entry, ProofJob } from "@prisma/client";
 import prisma from "./prisma";
 import { spawn } from "child_process";
 import fs from "fs";
-import { countOfPendingJobs, getAverageProcessingTime, timeToComplete } from "./models/job";
+import { timeToComplete } from "./models/job";
+import { log } from "./log";
 
 const CIRCUIT_OUT_DIR = "./output/circuit";
 
@@ -57,6 +58,10 @@ export async function generateProofModal(entry: Entry, job: ProofJob): Promise<v
         });
     });
 
+    // Create log file
+    const logFile = `${proofDir}/log.txt`;
+    fs.writeFileSync(logFile, "");
+
     // Use modal to generate proof
     return new Promise<void>((resolve, reject) => {
         const c = spawn("python", ["-m", "modal", "run", "modal/create-proof-gpu.py"], {
@@ -69,19 +74,23 @@ export async function generateProofModal(entry: Entry, job: ProofJob): Promise<v
         });
 
         c.stdout.on('data', (data) => {
+            log(logFile, data, "proof-gen-with-modal");
             process.stdout.write(`stdout: ${data}`);
         });
 
         c.stderr.on('data', (data) => {
+            log(logFile, data, "proof-gen-with-modal-error");
             process.stderr.write(`stderr: ${data}`);
         });
 
         c.on('exit', (code, signal) => {
             if (code === 0) {
                 console.log(`Generated proof for ${circuitSlug} with name ${circuitName}`);
+                log(logFile, `Generated proof for ${circuitSlug} with name ${circuitName}`, "proof-gen-with-modal");
                 resolve();
             } else {
                 console.log(`Process exited with code ${code}`);
+                log(logFile, `Proof generation failed with code ${code}`, "proof-gen-with-modal");
                 reject(new Error(`Proof generation failed with code ${code}`));
             }
         });

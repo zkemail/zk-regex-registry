@@ -17,6 +17,7 @@ import { circuitOutputToArgs, parseOutput } from "@/lib/contract";
 import { SimpleDialog } from "@/components/simple-dialog";
 import { calculateSignalLength } from "@/lib/code-gen/utils";
 import { redeployContracts } from "./action";
+import { getProofLogs } from "@/lib/models/logs";
 
 export interface ContentProps {
     entry: Entry
@@ -57,6 +58,7 @@ export function PageContent(props: ContentProps) {
     const [signalLength, setSignalLength] = useState<number>(1);
     const [externalInputs, setExternalInputs] = useState<Record<string,string>>({});
     const [isRedeploying, setIsRedeploying] = useState<boolean>(false);
+    const [proofLogs, setProofLogs] = useState<Record<string, string>>({});
 
     useEffect(() => {
         if (!inputWorkers[entry.slug]) {
@@ -77,7 +79,9 @@ export function PageContent(props: ContentProps) {
             }
             setMessages(processedEmails)
         }
-        fetchData();
+        if (googleAuthToken) {
+            fetchData();
+        }
     }
 
     useEffect(() => {
@@ -97,6 +101,20 @@ export function PageContent(props: ContentProps) {
         }
         loadProofsFromStorage(entry.slug);
     }, [])
+
+    useEffect(() => {
+        for (const id of Object.keys(proofStatus)) {
+            if (["COMPLETED", "ERROR"].includes(proofStatus[id].status) && !proofLogs[id]) {
+                getProofLogs(entry.slug, id).then((logs) => {
+                    setProofLogs({
+                        ...proofLogs,
+                        [id]: logs,
+                    })
+                })
+            }
+        }
+    }, [proofStatus])
+
     const { data: hash, error, isPending, writeContract } = useWriteContract();
 
     const { isLoading: isConfirming, isSuccess: isConfirmed, isError, error: txError } =
@@ -219,6 +237,7 @@ export function PageContent(props: ContentProps) {
                     <TableHead className="w-[100px]">Job ID</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Estimated Time Left</TableHead>
+                    <TableHead>View Logs</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -227,7 +246,12 @@ export function PageContent(props: ContentProps) {
                         <TableCell><Trash className="text-red-500" onClick={() => deleteProofFromStorage(id)} /></TableCell>
                         <TableCell className="font-medium">{proofStatus[id].id}</TableCell>
                         <TableCell>{proofStatus[id].status}</TableCell>
-                        <TableCell>{proofStatus[id].estimatedTimeLeft.toFixed(1)}</TableCell>
+                        <TableCell>{proofStatus[id].estimatedTimeLeft > 0 ? proofStatus[id].estimatedTimeLeft.toFixed(1) + "s" : "Taking longer than expected..."}</TableCell>
+                        <TableCell><SimpleDialog trigger={<Button variant="link">View</Button>} title={"Error logs"} wide={true}>
+                            <div>
+                                <pre>{proofLogs[id] || "No logs yet"}</pre>
+                            </div>
+                        </SimpleDialog></TableCell>
                     </TableRow>
                 ))}
             </TableBody>

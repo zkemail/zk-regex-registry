@@ -22,3 +22,17 @@ export async function getLogs(slug: string) {
     }
     return {codeLog, circuitLog};
 }
+
+export async function getProofLogs(slug: string, proofId: string) {
+    const CIRCUIT_OUT_DIR = "./output/circuit";
+    const proofDir = `${CIRCUIT_OUT_DIR}/${slug}/proofs`;
+
+    const proofLogPath = `${proofDir}/${proofId}/log.txt`;
+    let proofLog = "";
+    try {
+        proofLog = fs.readFileSync(proofLogPath, 'utf8');
+    } catch (e) {
+        proofLog = "No proof logs found";
+    }
+    return proofLog;
+}

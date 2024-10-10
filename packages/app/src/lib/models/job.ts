@@ -2,14 +2,14 @@ import prisma from "../prisma";
 
 // Calculate the estimated duration of a single job
 // If there are none, then we just use a default value of 120 seconds
-export async function getAverageProcessingTime() {
+export async function getAverageProcessingTime(entryId: string) {
     const average = (await prisma.proofJob.aggregate({
         _avg: {
             timeToComplete: true
         },
         where: {
             status: "COMPLETED",
-            // entryId: entry.id,
+            entryId: entryId,
         },
         take: 10
     }))._avg.timeToComplete || 120;
@@ -38,7 +38,7 @@ export async function timeToComplete(jobId: string) {
     if (!job) {
         return 0;
     }
-    const average = await getAverageProcessingTime();
+    const average = await getAverageProcessingTime(job.entryId);
     const countOfPending = await countOfPendingJobs(job.createdAt);
     // Current job is being processed
     if (job.status === "PROCESSING") {

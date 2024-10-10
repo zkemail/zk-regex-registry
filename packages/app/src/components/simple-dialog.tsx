@@ -17,11 +17,9 @@ export function SimpleDialog({title, children, trigger, wide = false}: SimpleDia
         <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        <div className="overflow-scroll">
+        <div className="overflow-scroll max-h-80">
             {children}
         </div>
-        {/* <DialogDescription className="overflow-scroll"> */}
-        {/* </DialogDescription> */}
     </DialogContent>
 </Dialog>
 }
