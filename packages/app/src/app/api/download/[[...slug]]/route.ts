@@ -17,9 +17,10 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
     const stats = statSync(output);
     const fileContent = readFileSync(output)
 
+    const filename = `${entry.slug}.zip`;
     return new NextResponse(fileContent, {
         headers: {
-            'Content-Disposition': `attachment; filename=example.zip`,
+            'Content-Disposition': `attachment; filename=${filename}`,
             'Content-Type': 'application/zip',
             "Content-Length": stats.size + "",
         }
