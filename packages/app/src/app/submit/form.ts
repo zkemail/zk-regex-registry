@@ -23,7 +23,7 @@ export const formSchema = z.object({
         name: z.string().min(1).transform(value => value.replace(/"/g, '')),
         ignoreBodyHashCheck: z.boolean(),
         enableMasking: z.boolean(),
-        shaPrecomputeSelector: z.string().transform(value => value.replace(/"/g, '\\"')),
+        shaPrecomputeSelector: z.string().transform(value => value.replace(/(?<!\\)"/g, '\\"')),
         senderDomain: z.string().refine(value => !value.includes('@'), {
             message: "Sender domain should not contain '@' symbol, only the domain",
         }),
