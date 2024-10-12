@@ -10,7 +10,7 @@ import { z, ZodObject } from "zod";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { formSchema } from "@/app/submit/form";
-import { FromAddressPattern, SubjectPattern, TimestampPattern, ToAddressPattern } from "@/app/submit/patterns";
+import { BodyPattern, FromAddressPattern, HeaderPattern, SubjectPattern, TimestampPattern, ToAddressPattern } from "@/app/submit/patterns";
 import { Entry } from "@prisma/client";
 import { useEffect, useState } from "react";
 
@@ -154,7 +154,7 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
                     <FormItem>
                         <FormLabel>Parts JSON</FormLabel>
                         <FormControl>
-                            <Textarea className="font-mono" {...field} />
+                            <Textarea rows={6} className="font-mono" {...field} />
                         </FormControl>
                         <FormDescription></FormDescription>
                         <FormMessage></FormMessage>
@@ -224,6 +224,12 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
             case "timestamp":
                 preFilledPattern = TimestampPattern;
                 break
+            case "body":
+                preFilledPattern = BodyPattern;
+                break;
+            case "header":
+                preFilledPattern = HeaderPattern;
+                break;
             default:
                 break;
         }
@@ -301,7 +307,7 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
                         <FormControl>
                             <Input placeholder="Password reset request from: info@x.com" {...field} />
                         </FormControl>
-                        <FormDescription>As if you were searching for the email in your Gmail inbox</FormDescription>
+                        <FormDescription>As if you were searching for the email in your Gmail inbox. Only emails matching this query will be shown to the user to prove when they sign in with Gmail.</FormDescription>
                         <FormMessage />
                     </FormItem>
                 )}
@@ -343,7 +349,7 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
                         <FormControl>
                             <Checkbox className="ml-2" checked={field.value} onCheckedChange={field.onChange} />
                         </FormControl>
-                        <FormDescription>Enable and send a mask to return a masked email in the public output</FormDescription>
+                        <FormDescription>Enable and send a mask to return a masked email in the public output. We recommend to disable this for most patterns.</FormDescription>
                         <FormMessage></FormMessage>
                     </FormItem>
                 )}
@@ -357,7 +363,7 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
                         <FormControl>
                             <Input placeholder="x.com" {...field} />
                         </FormControl>
-                        <FormDescription>This is used for DKIM verification</FormDescription>
+                        <FormDescription>This is the domain used for DKIM verification, which may not exactly match the senders domain (you can check via the d= field in the DKIM-Signature header). Note to only include the part after the @ symbol.</FormDescription>
                         <FormMessage></FormMessage>
                     </FormItem>
                 )}
@@ -367,11 +373,11 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
                 name="parameters.dkimSelector"
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel>DKIM selector</FormLabel>
+                        <FormLabel>DKIM Selector (Optional)</FormLabel>
                         <FormControl>
                             <Input placeholder="dkim" {...field} />
                         </FormControl>
-                        <FormDescription>(Optional) DKIM selector that is found in the email header</FormDescription>
+                        <FormDescription>(Optional) DKIM selector that is found in the email header. If not specified, it will be fetched automatically.</FormDescription>
                         <FormMessage></FormMessage>
                     </FormItem>
                 )}
@@ -381,11 +387,11 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
                 name="parameters.shaPrecomputeSelector"
                 render={({ field, formState }) => (
                     <FormItem>
-                        <FormLabel>SHA Precompute Selector</FormLabel>
+                        <FormLabel>SHA Precompute Selector (Optional)</FormLabel>
                         <FormControl>
                             <Input disabled={form.getValues("parameters.ignoreBodyHashCheck")} {...field} />
                         </FormControl>
-                        <FormDescription>A selector that is used to cut-off the email body so that we only compute the hash of the email body after the selector. This is to reduce the number of constraints in the circuit.</FormDescription>
+                        <FormDescription>A selector that is used to cut-off the email body so that we only compute the hash of the email body after the selector. This is to reduce the number of constraints in the circuit for long email bodies where only regex matches at the end matter.</FormDescription>
                         <FormMessage></FormMessage>
                     </FormItem>
                 )}
@@ -399,7 +405,7 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
                         <FormControl>
                             <Input type="number" disabled={form.getValues("parameters.ignoreBodyHashCheck")} {...field} />
                         </FormControl>
-                        <FormDescription>Must be a multiple of 64</FormDescription>
+                        <FormDescription>Must be a multiple of 64. If you have a SHA Precompute Selector, it should be the length of the body after that selector.</FormDescription>
                         <FormMessage></FormMessage>
                     </FormItem>
                 )}

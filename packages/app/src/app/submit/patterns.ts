@@ -69,3 +69,26 @@ export const TimestampPattern = [
         "regex_def": ";"
     }
 ]
+
+
+export const BodyPattern = [
+    {
+        "is_public": false,
+        "regex_def": ""
+    },
+    {
+        "is_public": true,
+        "regex_def": ""
+    }
+]
+
+export const HeaderPattern = [
+    {
+        "is_public": false,
+        "regex_def": ""
+    },
+    {
+        "is_public": true,
+        "regex_def": ""
+    }
+]
