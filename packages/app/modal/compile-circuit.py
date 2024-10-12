@@ -32,7 +32,11 @@ def main():
 def compile_circuit(slug: str):
     subprocess.run(["yarn", "install"], check=True, cwd="/project")
     ls_result = subprocess.run(["ls /project/circuit/*.circom"], capture_output=True, text=True, check=True, shell=True)
-    circuitPath = ls_result.stdout.strip()
+    circuit_files = ls_result.stdout.strip().split('\n')
+    if len(circuit_files) > 1:
+        circuitPath = next((file for file in circuit_files if file.endswith(f'/{slug}.circom')), circuit_files[0])
+    else:
+        circuitPath = circuit_files[0]
     circuitName = circuitPath.split("/")[-1].split(".")[0]
     subprocess.run(["mkdir", "-p", f"/temp_output/{slug}"], check=True)
     subprocess.run(["circom", circuitPath, "--r1cs", "--wasm", "-o", f"/temp_output/{slug}", "-l", "/project/node_modules"], check=True)
