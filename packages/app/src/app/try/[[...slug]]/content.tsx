@@ -53,6 +53,7 @@ export function PageContent(props: ContentProps) {
     } = useZkEmailSDK();
 
     const account = useAccount();
+    const { isConnected } = useAccount() // Add this hook to check if wallet is connected
 
     const [messages, setMessages] = useState<Email[]>([]);
     const [signalLength, setSignalLength] = useState<number>(1);
@@ -270,6 +271,10 @@ export function PageContent(props: ContentProps) {
     }
 
     function verifyProof(id: string) {
+        if (!isConnected) {
+            return // Don't proceed if wallet is not connected
+        }
+        
         writeContract({
             abi: [ {
                 "inputs": [
@@ -328,7 +333,25 @@ export function PageContent(props: ContentProps) {
             <TableBody>
                 {Object.keys(proofStatus).filter(id => proofStatus[id].status === "COMPLETED").map((id) => (
                     <TableRow key={id}>
-                        <TableCell><Button disabled={isPending || isConfirming}  onClick={() => verifyProof(id)}>Verify</Button></TableCell>
+                        <TableCell>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button 
+                                            disabled={!isConnected || isPending || isConfirming}  
+                                            onClick={() => verifyProof(id)}
+                                        >
+                                            Verify
+                                        </Button>
+                                    </TooltipTrigger>
+                                    {!isConnected && (
+                                        <TooltipContent>
+                                            <p>Please connect your wallet first</p>
+                                        </TooltipContent>
+                                    )}
+                                </Tooltip>
+                            </TooltipProvider>
+                        </TableCell>
                         <TableCell className="font-medium">{proofStatus[id].id}</TableCell>
                         <TableCell>{JSON.stringify(parseOutput(entry, proofStatus[id].publicOutput), null, 2)}</TableCell>
                         <TableCell><SimpleDialog title="Proof" trigger={<Button variant="link">View</Button>}><code><pre>{JSON.stringify(proofStatus[id].proof, null, 2)}</pre></code></SimpleDialog></TableCell>

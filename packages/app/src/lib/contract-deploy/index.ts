@@ -147,7 +147,7 @@ export async function addDkimEntry(entry: Entry): Promise<void> {
    const pubkey = pki.publicKeyFromPem(pkiStr);
    const chunkedKey = toCircomBigIntBytes(BigInt(pubkey.n.toString()));
    const hashedKey = BigInt(await pubKeyHasher(chunkedKey));
-
+   
    const privateKey = process.env.PRIVATE_KEY;
    if (!privateKey) {
      throw new Error('PRIVATE_KEY not found in environment variables');
