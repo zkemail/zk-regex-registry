@@ -24,12 +24,13 @@ export const Item = (props: {entry: Entry}) => {
     async function pendingOrCompleted(status: string) {
         // const icon = (status === "COMPLETED") ? <CheckCircle color="green" className="w-5 h-5 mr-2"/> : <Hourglass color="gray" className="w-5 h-5 mr-2"/>;
         let icon;
+        let logs;
         switch (status) {
             case "COMPLETED":
                 icon = <CheckCircle color="green" className="w-5 h-5 mr-2"/>;
                 break;
             case "ERROR":
-                const logs = await getLogs(entry.slug);
+                logs = await getLogs(entry.slug);
                 icon = <SimpleDialog trigger={<div><XCircle color="red" className="w-6 h-6 mr-2"/></div>} title={"Error logs"} wide={true}>
                   <div>
                     <pre>{logs.codeLog}</pre>
@@ -38,7 +39,13 @@ export const Item = (props: {entry: Entry}) => {
                 </SimpleDialog>
                 break;
             default:
-                icon = <Hourglass color="gray" className="w-5 h-5 mr-2"/>;
+                logs = await getLogs(entry.slug);
+                icon = <SimpleDialog trigger={<div><Hourglass color="gray" className="w-5 h-5 mr-2"/></div>} title={"Pending logs"} wide={true}>
+                  <div>
+                    <pre>{logs.codeLog}</pre>
+                    <pre>{logs.circuitLog}</pre>
+                  </div>
+                </SimpleDialog>
         }
         let tooltip = tooltips[status];
         return (
