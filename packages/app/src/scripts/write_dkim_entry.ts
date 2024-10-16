@@ -5,7 +5,6 @@ import { prisma } from "@/lib/prisma";
     const entries = await prisma.entry.findMany({
         where: {
             status: "COMPLETED",
-            withModal: true,
         }
     });
     for (const entry of entries) {
