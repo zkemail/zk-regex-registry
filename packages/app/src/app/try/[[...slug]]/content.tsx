@@ -5,7 +5,7 @@ import { Entry } from "@prisma/client";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { useState, useEffect, FormEvent } from "react";
 import { useGoogleAuth, fetchEmailList, fetchEmailsRaw, useZkEmailSDK } from "@zk-email/zk-email-sdk";
-import { Check, LoaderCircle, Trash, X } from 'lucide-react';
+import { Check, LoaderCircle, Trash, X, RefreshCw } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import PostalMime from 'postal-mime';
@@ -60,6 +60,7 @@ export function PageContent(props: ContentProps) {
     const [externalInputs, setExternalInputs] = useState<Record<string,string>>({});
     const [isRedeploying, setIsRedeploying] = useState<boolean>(false);
     const [proofLogs, setProofLogs] = useState<Record<string, string>>({});
+    const [emailPageToken, setEmailPageToken] = useState<string|undefined>("0");
 
     useEffect(() => {
         if (!inputWorkers[entry.slug]) {
@@ -70,7 +71,14 @@ export function PageContent(props: ContentProps) {
 
     function filterEmails(query: string) {
         const fetchData = async () => {
-            const res = await fetchEmailList(googleAuthToken.access_token, { q: query })
+            if (emailPageToken === undefined) {
+                return
+            }
+            const res = await fetchEmailList(googleAuthToken.access_token, { q: query, pageToken: emailPageToken, maxResults: 3})
+            setEmailPageToken(res.nextPageToken)
+            if (!res.messages) {
+                return
+            }
             const messageIds = res.messages.map((message: any) => message.id)
             const emails = await fetchEmailsRaw(googleAuthToken.access_token, messageIds);
 
@@ -78,7 +86,7 @@ export function PageContent(props: ContentProps) {
             for (const email of emails) {
                 processedEmails.push(await mapEmail(email));
             }
-            setMessages(processedEmails)
+            setMessages([...messages, ...processedEmails])
         }
         if (googleAuthToken) {
             fetchData();
@@ -190,6 +198,7 @@ export function PageContent(props: ContentProps) {
             return <p>No emails found</p>
         } else {
             return (
+                <>
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -223,6 +232,10 @@ export function PageContent(props: ContentProps) {
                         ))}
                     </TableBody>
                 </Table>
+                {emailPageToken !== undefined && (<div className="flex flex-row justify-center pt-2 pb-4" onClick={() => filterEmails(entry.emailQuery)}>
+                    <RefreshCw className="w-5 h-5 mr-2"/> Load more emails
+                </div>)}
+                </>
             )
         }
     }
