@@ -36,7 +36,7 @@ model ProofJob {
   createdBy      String
   creator        ApiKey   @relation(fields: [createdBy], references: [key])
   entryId        String
-  entry          Entry    @relation(fields: [entryId], references: [id])
+  entry          Entry    @relation(fields: [entryId], references: [id], onDelete: Cascade)
   status         String   @default("PENDING")
   createdAt      DateTime @default(now()) @map(name: "created_at")
   updatedAt      DateTime @updatedAt @map(name: "updated_at")
