@@ -6,15 +6,17 @@ import fs from "fs";
 import { builder } from "./circuit-runner";
 import { verify } from "crypto";
 
-import { bytesToHex, createWalletClient, getAddress, Hex, http, isHex, toBytes, toHex } from 'viem';
+import { bytesToHex, createPublicClient, createWalletClient, getAddress, Hex, http, isHex, parseAbi, toBytes, toHex } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { sepolia, foundry, optimismSepolia } from 'viem/chains';
 import { pki } from "node-forge";
 import { toCircomBigIntBytes } from "@zk-email/helpers";
+import { usePublicClient } from "wagmi";
 
 const CONTRACT_OUT_DIR = "./output/contract";
 const CODE_OUT_DIR = "./output/code";
 const CHAIN_ID = process.env.CHAIN_ID || "1";
+const CHAIN = sepolia;
 
 export async function deployContract(entry: Entry): Promise<void> {
     const contractDir = path.join(CODE_OUT_DIR, entry.slug, 'contract')
@@ -103,7 +105,7 @@ export async function buildContract(entry: Entry): Promise<void> {
 }
 
 
-export async function readContractAddresses(entry: Entry): Promise<{verifier: string, contract: string}> {
+export async function readContractAddresses(entry: Entry): Promise<{ verifier: string, contract: string }> {
     const contractDir = path.join(CODE_OUT_DIR, entry.slug, 'contract');
     let logFile = path.join(contractDir, "broadcast", "Deploy.s.sol", CHAIN_ID, "run-latest.json")
     if (!fs.existsSync(logFile)) {
@@ -126,63 +128,92 @@ export async function readContractAddresses(entry: Entry): Promise<{verifier: st
 }
 
 export async function addDkimEntry(entry: Entry): Promise<void> {
-   const domain = (entry.parameters as any).senderDomain as string;
-   const selector = (entry.parameters as any).dkimSelector as string;
-   const res = await fetch(`https://archive.prove.email/api/key?domain=${domain}`);
-   const body = await res.json();
-//    console.log(body);
+    const domain = (entry.parameters as any).senderDomain as string;
+    const selector = (entry.parameters as any).dkimSelector as string;
+    const res = await fetch(`https://archive.prove.email/api/key?domain=${domain}`);
+    const body = await res.json();
+    //    console.log(body);
 
-   if (!body.length) {
-     throw new Error(`No DKIM key found for domain ${domain}`);
-   }
+    if (!body.length) {
+        throw new Error(`No DKIM key found for domain ${domain}`);
+    }
 
-   let key: {selector: string, value: string};
-   if (selector) {
-    key = body.find((b: {selector: string}) => b.selector === selector);
-   } else {
-    key = body[0];
-   }
-   const pubKeyData = key.value.split(";").filter((part:string) => part.includes("p="));
-   const pkiStr = `-----BEGIN PUBLIC KEY-----${pubKeyData[0].split("=")[1]}-----END PUBLIC KEY-----`;
-   const pubkey = pki.publicKeyFromPem(pkiStr);
-   const chunkedKey = toCircomBigIntBytes(BigInt(pubkey.n.toString()));
-   const hashedKey = BigInt(await pubKeyHasher(chunkedKey));
-   
-   const privateKey = process.env.PRIVATE_KEY;
-   if (!privateKey) {
-     throw new Error('PRIVATE_KEY not found in environment variables');
-   }
-   const account = privateKeyToAccount(privateKey as Hex);
-   const client = createWalletClient({
-     account,
-     chain: optimismSepolia,
-     transport: http()
-   });
+    let key: { selector: string, value: string };
+    if (selector) {
+        key = body.find((b: { selector: string }) => b.selector === selector);
+    } else {
+        key = body[0];
+    }
+    const pubKeyData = key.value.split(";").filter((part: string) => part.includes("p="));
+    const pkiStr = `-----BEGIN PUBLIC KEY-----${pubKeyData[0].split("=")[1]}-----END PUBLIC KEY-----`;
+    const pubkey = pki.publicKeyFromPem(pkiStr);
+    const chunkedKey = toCircomBigIntBytes(BigInt(pubkey.n.toString()));
+    const hashedKey = BigInt(await pubKeyHasher(chunkedKey));
 
-   // Prepare contract interaction
-   const dkimContract = process.env.DKIM_REGISTRY;
-   if (!dkimContract) {
-     throw new Error('DKIM_REGISTRY not found in environment variables');
-   }
-   const contractAddress = getAddress(dkimContract as Hex); // Replace 'X' with the actual contract address
-   const abi = [{ 
-     name: 'setDKIMPublicKeyHash', 
-     type: 'function', 
-     inputs: [
-       { name: 'domain', type: 'string' },
-       { name: 'pubkeyHash', type: 'bytes32' }
-     ]
-   }];
+    const isDKIMPublicKeyHashValid = await checkDKIMPublicKeyHash(domain, hashedKey);
+    if (isDKIMPublicKeyHashValid) {
+        console.log(`DKIM key already exists for domain ${domain} selector ${selector}`);
+        return;
+    }
 
-   // Send transaction
-   const hash = await client.writeContract({
-     address: contractAddress,
-     abi,
-     functionName: 'setDKIMPublicKeyHash',
-     args: [domain, bytesToHex(toBytes(hashedKey), {size:32})]
-   });
+    const privateKey = process.env.PRIVATE_KEY;
+    if (!privateKey) {
+        throw new Error('PRIVATE_KEY not found in environment variables');
+    }
+    const account = privateKeyToAccount(privateKey as Hex);
+    const client = createWalletClient({
+        account,
+        chain: CHAIN,
+        transport: http()
+    });
 
-   console.log(`Transaction sent: ${hash}`);
+
+    // Prepare contract interaction
+    const dkimContract = process.env.DKIM_REGISTRY;
+    if (!dkimContract) {
+        throw new Error('DKIM_REGISTRY not found in environment variables');
+    }
+    const contractAddress = getAddress(dkimContract as Hex); // Replace 'X' with the actual contract address
+    const abi = [{
+        name: 'setDKIMPublicKeyHash',
+        type: 'function',
+        inputs: [
+            { name: 'domain', type: 'string' },
+            { name: 'pubkeyHash', type: 'bytes32' }
+        ],
+    }];
+
+    // Send transaction
+    const hash = await client.writeContract({
+        address: contractAddress,
+        abi,
+        functionName: 'setDKIMPublicKeyHash',
+        args: [domain, bytesToHex(toBytes(hashedKey), { size: 32 })],
+    });
+
+    console.log(`Transaction sent: ${hash}`);
+}
+
+export async function checkDKIMPublicKeyHash(domain: string, pubkeyHash: bigint): Promise<boolean> {
+    const dkimContract = process.env.DKIM_REGISTRY;
+    if (!dkimContract) {
+        throw new Error('DKIM_REGISTRY not found in environment variables');
+    }
+    const contractAddress = getAddress(dkimContract as Hex); // Replace 'X' with the actual contract address
+    const abi = parseAbi(["function isDKIMPublicKeyHashValid( string memory domainName, bytes32 publicKeyHash) external view returns (bool)"]);
+    // use viem to read the contract function
+    const publicClient = createPublicClient({
+        chain: CHAIN,
+        transport: http()
+    });
+
+    const isDKIMPublicKeyHashValid = await publicClient.readContract({
+        address: contractAddress,
+        abi,
+        functionName: 'isDKIMPublicKeyHashValid',
+        args: [domain, bytesToHex(toBytes(pubkeyHash), { size: 32 })],
+    });
+    return isDKIMPublicKeyHashValid;
 }
 
 export async function pubKeyHasher(pubkeyChunks: string[]): Promise<string> {
