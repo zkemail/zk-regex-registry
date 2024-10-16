@@ -43,8 +43,6 @@ def prove(env):
     dkim_registry = env["DKIM_REGISTRY"]
     circuit_name = env["CIRCUIT_NAME"]
      
-    print(env)
-
     print(f"Exporting solidity verifier for {slug}/{circuit_name}")
     subprocess.run(["snarkjs", "zkey", "export", "solidityverifier", f"/output/circuit/{slug}/{circuit_name}.zkey", "/contract/src/verifier.sol"], check=True)
 
