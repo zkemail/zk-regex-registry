@@ -28,7 +28,7 @@ def main():
     timeout=3600,
     image=base_image,
     cpu=16,
-    gpu=["H100"],
+    gpu="H100",
     volumes={
         "/output": modal.CloudBucketMount(
             bucket_name=bucket_name,
