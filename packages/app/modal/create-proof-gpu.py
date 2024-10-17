@@ -29,7 +29,6 @@ def main():
 @app.function(
     timeout=3600,
     image=base_image,
-    keep_warm=1,
     container_idle_timeout=300,
     gpu="T4",
     volumes={
