@@ -17,6 +17,7 @@ def main():
     compile_circuit.remote(slug)
 
 @app.function(
+    retries=3,
     timeout=18000,
     image=base_image,
     volumes={
