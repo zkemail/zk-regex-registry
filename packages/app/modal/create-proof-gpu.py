@@ -31,7 +31,7 @@ def main():
     image=base_image,
     keep_warm=1,
     container_idle_timeout=300,
-    gpu="H100",
+    gpu="T4",
     volumes={
         "/output": modal.CloudBucketMount(
             bucket_name=bucket_name,
