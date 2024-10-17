@@ -8,6 +8,7 @@ import { genCircomAllstr } from './gen_circom';
 import { spawn } from 'child_process';
 import { mapPrefixRegex } from './utils';
 import { log } from '../log';
+import { getLogs } from '../models/logs';
 
 const EXAMPLE_PROJECT_TYPE = 'zkemail_example';
 const MASKING_PROJECT_TYPE = 'zkemail_masking';
@@ -248,4 +249,17 @@ export const generateSolidityVerifier = (circuitDir: string, outDir: string, out
             resolve()
         });
     })
+}
+
+export const shouldRetryCompilation = async (slug: string): Promise<boolean> => {
+    try {
+        const compilationLogs = await getLogs(slug)
+        if (compilationLogs.circuitLog && compilationLogs.circuitLog.includes("Signals.SIGSEGV: 11")) {
+            return true
+        } else {
+            return false
+        }
+    } catch (e) {
+        return false
+    }
 }

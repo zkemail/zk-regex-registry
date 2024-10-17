@@ -1,7 +1,8 @@
 import { compileCircuitModal, downloadBuiltCircuit, downloadZkey } from "@/lib/circuit-gen/gen";
 import { getRandomPendingEntry, updateState } from "@/lib/models/entry";
-import { generateCodeLibrary } from "@/lib/code-gen/gen"
+import { generateCodeLibrary, shouldRetryCompilation } from "@/lib/code-gen/gen"
 import { Entry } from "@prisma/client";
+import { getLogs } from "@/lib/models/logs";
 
 async function generateCiruitService() {
     while (true) {
@@ -27,8 +28,13 @@ async function generateCiruitService() {
             await downloadBuiltCircuit(entry.slug, circuitName);
             await updateState(entry.id, "COMPLETED", true);
         } catch (e) {
-            console.error("Failed to compile circuit using modal", e)
-            await updateState(entry.id, "ERROR");
+            if (await shouldRetryCompilation(entry.slug)) {
+                console.error("Retrying circuit compilation", e)
+                await updateState(entry.id, "PENDING");
+            } else {
+                console.error("Failed to compile circuit using modal", e)
+                await updateState(entry.id, "ERROR");
+            }
         }
     }
 }
