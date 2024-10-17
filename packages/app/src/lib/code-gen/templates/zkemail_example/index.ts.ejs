@@ -39,6 +39,7 @@ try {
 
         let currentIndex = 2;
         <% values.forEach(function(value) { %>
+        <% if (value.parts.find(a => a.is_public)) { // skip output unpacking when there isn't going to be an output%>
         {
             const packedLength = <%- Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0) %>
             const packedValue = witness.slice(currentIndex, currentIndex + packedLength);
@@ -46,7 +47,7 @@ try {
             console.log("<%- value.name %>: ", unpackedValue);
             currentIndex += packedLength;
         }
-        <% }) %>
+        <% }}) %>
 
         <% externalInputs.forEach(function(input) { %>
         {
