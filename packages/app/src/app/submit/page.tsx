@@ -45,10 +45,10 @@ export default function Submit() {
                     {
                         name: "handle",
                         location: "body",
-                        parts: [
-  { "is_public": false, "regex_def": "email was meant for @" }, 
-  { "is_public": true, "regex_def": "(a-zA-Z0-9_)+" }
-]
+                        parts: JSON.stringify([
+                            { "is_public": false, "regex_def": "email was meant for @" }, 
+                            { "is_public": true, "regex_def": "(a-zA-Z0-9_)+" }
+                        ], null, 2)
                     }
                 ],
                 externalInputs: []
