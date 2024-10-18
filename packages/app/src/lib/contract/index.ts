@@ -60,13 +60,15 @@ export const parseOutput = (entry: Entry, output: string[]) => {
     return result;
   }
   for (const value of (entry.parameters as any).values || []) {
-    const packLength = Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0);
-    const data = output.slice(i, i+packLength);
-    const unpackedValue = packedNBytesToString(data.map(BigInt)).replaceAll('\u0000', '');
-    i += packLength;
-    result = {
-      ...result,
-      [value.name]: unpackedValue
+    if (value.parts.find((a: {is_public: boolean}) => a.is_public)) {
+      const packLength = Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0);
+      const data = output.slice(i, i+packLength);
+      const unpackedValue = packedNBytesToString(data.map(BigInt)).replaceAll('\u0000', '');
+      i += packLength;
+      result = {
+        ...result,
+        [value.name]: unpackedValue
+      }
     }
   }
   for (const value of (entry.parameters as any).externalInputs || []) {

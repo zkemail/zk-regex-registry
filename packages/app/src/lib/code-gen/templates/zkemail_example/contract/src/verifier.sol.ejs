@@ -22,7 +22,7 @@ pragma solidity >=0.7.0 <0.9.0;
 
 contract Groth16Verifier {
 
-    <% let cur_idx = 1; values.forEach(function(value) { const packSize = Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0); cur_idx += packSize; });%>
+    <% let cur_idx = 1; values.filter(v => v.parts.find(a => a.is_public)).forEach(function(value) { const packSize = Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0); cur_idx += packSize; });%>
     <% externalInputs.forEach(function(value) { const packSize = Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0); cur_idx += packSize; });%>
     function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[<%-cur_idx%>] calldata _pubSignals) public view returns (bool) {
         // verification code will only be filled after the circuit proving keys are generated

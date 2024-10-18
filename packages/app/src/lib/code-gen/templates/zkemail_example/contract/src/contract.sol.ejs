@@ -18,7 +18,7 @@ contract Contract is Ownable {
     uint16 public constant pack_size = 31;
     uint16 public constant pubkey_hash_len = 1;
     string public constant domain = "<%- senderDomain %>";
-<% let signal_size = 1; values.forEach(function(value) { const packSize = Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0) %>
+<% let signal_size = 1; values.filter(v => v.parts.find(a => a.is_public)).forEach(function(value) { const packSize = Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0) %>
     uint16 public constant <%- value.name %>_len = <%- packSize %>;<% signal_size += packSize;}) %>
 
 <% externalInputs.forEach(function(value) { const packSize = Math.floor(value.maxLength / 31) + (value.maxLength % 31 ? 1 : 0) %>
@@ -38,7 +38,7 @@ contract Contract is Ownable {
         // verify RSA
         bytes32 ph = bytes32(signals[0]);
         require(dkimRegistry.isDKIMPublicKeyHashValid(domain, ph), "RSA public key incorrect");
-<% let cur_idx = 1; values.forEach(function(value) { %>
+<% let cur_idx = 1; values.filter(v => v.parts.find(a => a.is_public)).forEach(function(value) { %>
         // unpack <%- value.name %>
         uint[] memory packed_<%- value.name %> = new uint[](<%- value.name %>_len);
         for (uint i = 0; i < <%- value.name %>_len; i++) {
