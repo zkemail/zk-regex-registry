@@ -64,8 +64,11 @@ export const formSchema = z.object({
                     ctx.addIssue( {code: 'custom', message: 'Must look like [[[22,1],[1,1]]]'})
                 }
             }).optional(),
-            parts: z.string().transform( ( str, ctx ) => {
-                // Check if the string contains 'is_public'
+            parts: z.union([z.string(), z.array(z.any())]).transform((value, ctx) => {
+                // Note that we union z.array(z.any())] so that we use the prefilled patterns as well
+                // because somehow parts is getting typecast to an any[] incorrectly 
+                const str = typeof value === 'string' ? value : JSON.stringify(value);
+                // Check    if the string contains 'is_public'
                 if (!str.includes('is_public')) {
                     ctx.addIssue({ 
                         code: 'custom', 
@@ -86,7 +89,6 @@ export const formSchema = z.object({
                     ctx.addIssue({ code: 'custom', message: 'Parts must be an array' });
                     return z.NEVER;
                 }
-
                 for (let i = 0; i < parsed.length; i++) {
                     const part = parsed[i];
                     if (typeof part !== 'object' || part === null) {
@@ -106,8 +108,9 @@ export const formSchema = z.object({
                 }
                 try {
                     // try to map and see if it works
-                    getPrefixRegex(parsed)
-                    return parsed
+                    getPrefixRegex(parsed);
+                    console.log("Parsed regex: ", parsed, str);
+                    return parsed;
                 }
                 catch (e: any) {
                     ctx.addIssue( { code: 'custom', message: (e as Error).message } )

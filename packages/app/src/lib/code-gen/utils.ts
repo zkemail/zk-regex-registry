@@ -18,9 +18,10 @@ export function getPrefixRegex(parts: { is_public: boolean, regex_def: string }[
     let prefixRegex = "";
     for (let part of parts) {
         if (!part.is_public) prefixRegex = prefixRegex + part.regex_def;
+        if (!part.is_public && !part.regex_def) throw new Error('Part has to have a nonempty regex with is_public = false')
         else break;
     }
-    if (!prefixRegex) throw new Error('Part has to have start with a regex that is_public = false in order to find it later')
+    if (!prefixRegex) throw new Error('Part has to have a regex with is_public = false in order to find it later')
     return JSON.stringify(prefixRegex)
 }
 
