@@ -107,7 +107,6 @@ export const formSchema = z.object({
                 try {
                     // try to map and see if it works
                     getPrefixRegex(parsed);
-                    console.log("Parsed regex: ", parsed, str);
                     return parsed;
                 }
                 catch (e: any) {
