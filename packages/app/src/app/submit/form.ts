@@ -66,19 +66,43 @@ export const formSchema = z.object({
             }).optional(),
             parts: z.string().transform( ( str, ctx ) => {
                 // Check if the string contains 'is_public'
-                if (!str.includes('is_public')) {
+                if (!str.includes('is_public') || !str.includes('is_private')) {
                     ctx.addIssue({ 
                         code: 'custom', 
-                        message: 'Each parts config must include at least one "is_public" field. Please add it for now until we fix this requirement.' 
+                        message: 'Each parts config must include at least one "is_public" and "is_private" field. Please add it for now until we fix this requirement.' 
                     });
                     return z.NEVER;
                 }
                 let parsed;
+
                 try {
                     parsed = JSON.parse( str )
                 } catch ( e ) {
                     ctx.addIssue( { code: 'custom', message: 'Invalid JSON' } )
                     return z.NEVER
+                }
+                // Validate the structure of the parsed JSON
+                if (!Array.isArray(parsed)) {
+                    ctx.addIssue({ code: 'custom', message: 'Parts must be an array' });
+                    return z.NEVER;
+                }
+
+                for (let i = 0; i < parsed.length; i++) {
+                    const part = parsed[i];
+                    if (typeof part !== 'object' || part === null) {
+                        ctx.addIssue({ code: 'custom', message: `Part ${i} must be an object` });
+                        return z.NEVER;
+                    }
+
+                    if (!('is_public' in part) && !('is_private' in part)) {
+                        ctx.addIssue({ code: 'custom', message: `Part ${i} must have a boolean 'is_public' or 'is_private' field` });
+                        return z.NEVER;
+                    }
+
+                    if (!('regex_def' in part) || typeof part.regex_def !== 'string') {
+                        ctx.addIssue({ code: 'custom', message: `Part ${i} must have a string 'regex_def' field` });
+                        return z.NEVER;
+                    }
                 }
                 try {
                     // try to map and see if it works

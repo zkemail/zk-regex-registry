@@ -20,9 +20,10 @@ Visit the [submit page](https://registry-dev.zkregex.com/submit) to submit it di
 	- This will be used to generate the circuits later on. Essentially, this will affect the file and variable names in the circuit code
 - **Skip Body Hash Check**
 	- Set this to `true` if the information you want can fully be retrieved from the headers
-- **SHA Precompute Selector**
+- **Email Body Cutoff Value**
 	- Because we want to optimize the number of constraints in the circuit, we can use field to split the email body into two. A hash will be pre-computed for the first half and the second half will be calculated in the circuit itself for verification
-	- Make sure the fields you are extracting are in the second half of the split by setting the Selector to a unique string that is before the extracted data
+	- Make sure the fields you are extracting are in the second half of the split by setting the Cutoff Value to a unique string that is before the extracted data
+	- Note that in the generated circuit, we refer to this as a Sha Precompute Selector
 - **Use new ZK Regex SDK for circuit generation**
 	- Set this to true to use the new SDK for circuit generation
 	- V1 of the SDK uses a javascript implementation that is outdated and uses a different syntax for the fields. You can use the [tool here](https://tool.zkregex.com/) to generate the inputs required to create a pattern

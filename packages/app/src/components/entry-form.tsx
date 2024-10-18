@@ -387,11 +387,11 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
                 name="parameters.shaPrecomputeSelector"
                 render={({ field, formState }) => (
                     <FormItem>
-                        <FormLabel>SHA Precompute Selector (Optional)</FormLabel>
+                        <FormLabel>Email Body Cutoff Value (Optional)</FormLabel>
                         <FormControl>
                             <Input disabled={form.getValues("parameters.ignoreBodyHashCheck")} {...field} />
                         </FormControl>
-                        <FormDescription>A selector that is used to cut-off the email body so that we only compute the hash of the email body after the selector. This is to reduce the number of constraints in the circuit for long email bodies where only regex matches at the end matter.</FormDescription>
+                        <FormDescription>We will cut-off the part of the email body before this value, so that we only compute the regex on the email body after this value. This is to reduce the number of constraints in the circuit for long email bodies where only regex matches at the end matter.</FormDescription>
                         <FormMessage></FormMessage>
                     </FormItem>
                 )}
@@ -405,7 +405,7 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
                         <FormControl>
                             <Input type="number" disabled={form.getValues("parameters.ignoreBodyHashCheck")} {...field} />
                         </FormControl>
-                        <FormDescription>Must be a multiple of 64. If you have a SHA Precompute Selector, it should be the length of the body after that selector.</FormDescription>
+                        <FormDescription>Must be a multiple of 64. If you have a Email Body Cutoff Value, it should be the length of the body after that value.</FormDescription>
                         <FormMessage></FormMessage>
                     </FormItem>
                 )}
