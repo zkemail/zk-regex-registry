@@ -68,7 +68,7 @@ def compile_circuit(slug: str):
         print(f"Number of non-linear constraints: {non_linear_constraints}")
     else:
         print("Could not find non-linear constraints in the output")
-    power = max(math.floor(math.log(non_linear_constraints, 2)), 22)
+    power = max(math.ceil(math.log(non_linear_constraints, 2)), 22)
 
     # check if the power of tau exists
     if not os.path.exists(f"/powersOfTau28_hez_final_{power}.ptau"):
