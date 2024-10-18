@@ -80,7 +80,7 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
                         location: value.location,
                         name: value.name,
                         maxLength: value.maxLength,
-                        parts: (typeof value.parts === 'string') ? JSON.parse(value.parts) : value.parts,
+                        parts: (typeof value.parts === 'string') ? value.parts : JSON.stringify(value.parts, null, 2),
                     })
                 } else {
                     append({
@@ -234,7 +234,7 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
                 break;
         }
         if (preFilledPattern) {
-            form.setValue(`parameters.values.${index}.parts`, preFilledPattern)
+            form.setValue(`parameters.values.${index}.parts`, JSON.stringify(preFilledPattern, null, 2))
         } else {
         }
     }
