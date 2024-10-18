@@ -41,12 +41,16 @@ def main():
     },
     )
 def prove(slug: str, circuitName: str, input):
+    print(f"Running prove for {slug} with {circuitName}")
     with open(f"input.json", "w") as f:
         f.write(input)
 
+    print("Generating witness")
     subprocess.run(["node", f"/output/circuit/{slug}/{circuitName}_js/generate_witness.js", f"/output/circuit/{slug}/{circuitName}_js/{circuitName}.wasm", f"input.json", f"output.wtns"], check=True)
+    print("Generating proof")
     subprocess.run(["/rapidsnark/package/bin/prover_cuda", f"/output/circuit/{slug}/{circuitName}.zkey", f"output.wtns", f"proof.json", f"public.json"], check=True)
 
+    print("Returning proof and public outputs")
     # read from proof.json and public.json and return them
     with open(f"proof.json", "r") as f:
         proof = f.read()
