@@ -1,6 +1,8 @@
 import modal
 import subprocess
 import os
+import re
+import math
 app = modal.App()
 
 base_image = (
@@ -53,8 +55,11 @@ def compile_circuit(slug: str):
     circuitName = circuitPath.split("/")[-1].split(".")[0]
     subprocess.run(["mkdir", "-p", f"/temp_output/{slug}"], check=True)
     
-    result = subprocess.run(["circom", circuitPath, "--r1cs", "--wasm", "-o", f"/temp_output/{slug}", "-l", "/project/node_modules"], check=True, capture_output=True, text=True)
+    result = subprocess.run(["circom", circuitPath, "--r1cs", "--wasm", "-o", f"/temp_output/{slug}", "-l", "/project/node_modules"], capture_output=True, text=True)
     print(result.stdout)
+    print(result.stderr)
+    if result.returncode != 0:
+        raise Exception("non zero return code, error compiling circuit")
 
     # find the number of non-linear constraints to determine the power of tau
     non_linear_constraints_match = re.search(r'non-linear constraints: (\d+)', result.stdout)
@@ -63,7 +68,7 @@ def compile_circuit(slug: str):
         print(f"Number of non-linear constraints: {non_linear_constraints}")
     else:
         print("Could not find non-linear constraints in the output")
-    power = math.max(math.floor(math.log(non_linear_constraints, 2)), 22)
+    power = max(math.ceil(math.log(non_linear_constraints, 2)), 22)
 
     # check if the power of tau exists
     if not os.path.exists(f"/powersOfTau28_hez_final_{power}.ptau"):
