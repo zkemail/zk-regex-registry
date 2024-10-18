@@ -415,7 +415,7 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
                 name="useNewSdk"
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Use new ZK Regex SDK for circuit generation</FormLabel>
+                        <FormLabel>Use new ZK Regex SDK for circuit generation (Recommended)</FormLabel>
                         <FormControl>
                             <Checkbox className="ml-2" checked={field.value} onCheckedChange={field.onChange} />
                         </FormControl>
