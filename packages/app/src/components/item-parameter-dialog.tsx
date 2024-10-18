@@ -21,11 +21,11 @@ export function ItemParameterDialog(props: { entry: Entry }) {
                 {/* View Parameters */}
                 <Button className="mr-2" variant="link">View Parameters</Button>
             </DialogTrigger>
-            <DialogContent  className="overflow-clip">
+            <DialogContent className="max-h-[90vh] overflow-hidden flex flex-col">
                 <DialogHeader>
                     <DialogTitle>Pattern Metadata</DialogTitle>
                 </DialogHeader>
-                <DialogDescription className="overflow-scroll">
+                <DialogDescription className="overflow-y-auto flex-grow">
                     <code className="text-xs">
                         <pre>
                             {JSON.stringify(cleanedParams, null, 2)}
