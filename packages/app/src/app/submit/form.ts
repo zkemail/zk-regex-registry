@@ -66,10 +66,10 @@ export const formSchema = z.object({
             }).optional(),
             parts: z.string().transform( ( str, ctx ) => {
                 // Check if the string contains 'is_public'
-                if (!str.includes('is_public') || !str.includes('is_private')) {
+                if (!str.includes('is_public')) {
                     ctx.addIssue({ 
                         code: 'custom', 
-                        message: 'Each parts config must include at least one "is_public" and "is_private" field. Please add it for now until we fix this requirement.' 
+                        message: 'Each parts config must include at least one "is_public" field, and at least one thats true and one thats false. Please add it for now until we fix this requirement.' 
                     });
                     return z.NEVER;
                 }
@@ -94,8 +94,8 @@ export const formSchema = z.object({
                         return z.NEVER;
                     }
 
-                    if (!('is_public' in part) && !('is_private' in part)) {
-                        ctx.addIssue({ code: 'custom', message: `Part ${i} must have a boolean 'is_public' or 'is_private' field` });
+                    if (!('is_public' in part) || typeof part.is_public !== 'boolean') {
+                        ctx.addIssue({ code: 'custom', message: `Part ${i} must have a boolean 'is_public' field` });
                         return z.NEVER;
                     }
 
