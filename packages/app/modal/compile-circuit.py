@@ -55,8 +55,11 @@ def compile_circuit(slug: str):
     circuitName = circuitPath.split("/")[-1].split(".")[0]
     subprocess.run(["mkdir", "-p", f"/temp_output/{slug}"], check=True)
     
-    result = subprocess.run(["circom", circuitPath, "--r1cs", "--wasm", "-o", f"/temp_output/{slug}", "-l", "/project/node_modules"], check=True, capture_output=True, text=True)
+    result = subprocess.run(["circom", circuitPath, "--r1cs", "--wasm", "-o", f"/temp_output/{slug}", "-l", "/project/node_modules"], capture_output=True, text=True)
     print(result.stdout)
+    print(result.stderr)
+    if result.returncode != 0:
+        raise Exception("non zero return code, error compiling circuit")
 
     # find the number of non-linear constraints to determine the power of tau
     non_linear_constraints_match = re.search(r'non-linear constraints: (\d+)', result.stdout)
