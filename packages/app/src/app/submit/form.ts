@@ -114,7 +114,8 @@ export const formSchema = z.object({
                     return z.NEVER
                 }
                 
-            }).optional(),
+            }).optional()
+            .or(z.array(z.any())), // this is that when we pre-populate the form directly with an array, the form will still accept it
         })),
         externalInputs: z.array(z.object({
             name: z.string().min(1),

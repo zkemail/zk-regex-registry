@@ -80,7 +80,7 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
                         location: value.location,
                         name: value.name,
                         maxLength: value.maxLength,
-                        parts: (typeof value.parts === 'string') ? value.parts : JSON.stringify(value.parts, null, 2),
+                        parts: value.parts,
                     })
                 } else {
                     append({
@@ -154,7 +154,8 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
                     <FormItem>
                         <FormLabel>Parts JSON</FormLabel>
                         <FormControl>
-                            <Textarea rows={6} className="font-mono" {...field} />
+                            {/* We need to stringify this since we could pass an object when we pre-populate the field (else we will see something like [object Object] in the textarea) */}
+                            <Textarea rows={6} className="font-mono" {...field} value={typeof field.value === 'string' ? field.value : JSON.stringify(field.value, null, 2)} />
                         </FormControl>
                         <FormDescription></FormDescription>
                         <FormMessage></FormMessage>
@@ -234,7 +235,7 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
                 break;
         }
         if (preFilledPattern) {
-            form.setValue(`parameters.values.${index}.parts`, JSON.stringify(preFilledPattern, null, 2))
+            form.setValue(`parameters.values.${index}.parts`, preFilledPattern)
         } else {
         }
     }
