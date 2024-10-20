@@ -36,6 +36,7 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
                 enableMasking: false,
                 shaPrecomputeSelector: "",
                 emailBodyMaxLength: 4032,
+                emailHeaderMaxLength: 1024,
                 senderDomain: "",
                 dkimSelector: "",
                 values: [],
@@ -393,6 +394,20 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
                             <Input disabled={form.getValues("parameters.ignoreBodyHashCheck")} {...field} />
                         </FormControl>
                         <FormDescription>We will cut-off the part of the email body before this value, so that we only compute the regex on the email body after this value. This is to reduce the number of constraints in the circuit for long email bodies where only regex matches at the end matter.</FormDescription>
+                        <FormMessage></FormMessage>
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="parameters.emailHeaderMaxLength"
+                render={({ field, formState }) => (
+                    <FormItem>
+                        <FormLabel>Max Email Header Length</FormLabel>
+                        <FormControl>
+                            <Input type="number" {...field} />
+                        </FormControl>
+                        <FormDescription>Must be a multiple of 64.</FormDescription>
                         <FormMessage></FormMessage>
                     </FormItem>
                 )}

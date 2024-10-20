@@ -40,6 +40,7 @@ export default function Submit() {
                 shaPrecomputeSelector: ">Not my account<",
                 senderDomain: "x.com",
                 emailBodyMaxLength: 4032,
+                emailHeaderMaxLength: 1024,
                 dkimSelector: "dkim-202308",
                 values: [
                     {

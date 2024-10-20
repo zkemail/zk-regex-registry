@@ -73,7 +73,7 @@ template <%- name %>(maxHeaderLength, maxBodyLength, n, k, packSize) {
 }
 
 <% if (filteredExternalInputs.length > 0) {let public_args = filteredExternalInputs.map( i => i.name).join(", "); %>
-component main { public [<%- public_args %>]} = <%- name %>(1024, <%- ignoreBodyHashCheck ? 0 : emailBodyMaxLength %>, 121, 17, 7);
+component main { public [<%- public_args %>]} = <%- name %>(<%- emailHeaderMaxLength || 1024 %>, <%- ignoreBodyHashCheck ? 0 : emailBodyMaxLength %>, 121, 17, 7);
 <% } else { %>
-component main = <%- name %>(1024, <%- ignoreBodyHashCheck ? 0 : emailBodyMaxLength %>, 121, 17, 7);
+component main = <%- name %>(<%- emailHeaderMaxLength || 1024 %>, <%- ignoreBodyHashCheck ? 0 : emailBodyMaxLength %>, 121, 17, 7);
 <% } %>
