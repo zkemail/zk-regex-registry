@@ -4,7 +4,7 @@ export async function generateCircuitInputs(rawEmail, inputs) {
     const circuitInputs = await generateEmailVerifierInputs(rawEmail, {
         ignoreBodyHashCheck: <%- ignoreBodyHashCheck %>,
         maxBodyLength: <%- ignoreBodyHashCheck ? 0 : emailBodyMaxLength %>,
-        maxHeaderLength: 1024,
+        maxHeadersLength: <%- emailHeaderMaxLength || 1024 %>,
         shaPrecomputeSelector: "<%- shaPrecomputeSelector.replaceAll('"', '\\\"') %>",
     });
 

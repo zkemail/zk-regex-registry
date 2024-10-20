@@ -43,6 +43,12 @@ export const formSchema = z.object({
             }
             return n;
         }),
+        emailHeaderMaxLength: z.coerce.number().transform((n, ctx) => {
+            if (n % 64 !== 0) {
+                ctx.addIssue({ code: 'custom', message: 'Must be a multiple of 64' })
+            }
+            return n;
+        }).default(1024),
         values: z.array(z.object({
             name: z.string().min(1).transform((value, ctx) => {
                 if (value.includes(' ')) {
