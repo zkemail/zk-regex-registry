@@ -93,7 +93,6 @@ export const formSchema = z.object({
                     ctx.addIssue({ code: 'custom', message: 'Parts must be an array' });
                     return z.NEVER;
                 }
-
                 for (let i = 0; i < parsed.length; i++) {
                     const part = parsed[i];
                     if (typeof part !== 'object' || part === null) {
@@ -113,8 +112,8 @@ export const formSchema = z.object({
                 }
                 try {
                     // try to map and see if it works
-                    getPrefixRegex(parsed)
-                    return parsed
+                    getPrefixRegex(parsed);
+                    return parsed;
                 }
                 catch (e: any) {
                     ctx.addIssue({ code: 'custom', message: (e as Error).message })
