@@ -1,4 +1,4 @@
-import { generateCodeLibrary } from "@/lib/code-gen/gen";
+import { generateCodeLibrary, generateZip } from "@/lib/code-gen/gen";
 import { NextRequest, NextResponse } from "next/server";
 import { getEntryBySlug } from "@/lib/models/entry";
 import { readFileSync, statSync } from "fs";
@@ -13,7 +13,8 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
             status: 404
         })
     }
-    const output = await generateCodeLibrary(entry.parameters, entry.slug, entry.status);
+    await generateCodeLibrary(entry.parameters, entry.slug, entry.status);
+    const output = await generateZip(entry.slug);
     const stats = statSync(output);
     const fileContent = readFileSync(output)
 

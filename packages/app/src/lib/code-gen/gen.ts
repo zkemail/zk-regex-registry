@@ -18,7 +18,6 @@ const templatesDir = './src/lib/code-gen/templates'
 const outputDir = path.join(process.env.GENERATED_OUTPUT_DIR || "./output", 'code')
 const circuitOutputDir = path.join('./output', 'circuit')
 const codeOutputDir = path.join('./output', 'code')
-console.log("DIRRR", outputDir);
 const unsafeDirPatterns = ['..', '~'];
 
 export function codeGenerationLogPath(circuitSlug: string): string {
@@ -35,7 +34,7 @@ export function fillDefaultParameters(parameters: any) {
     return parameters;
 }
 
-export const generateCodeLibrary = async (parameters: any, outputName: string, status: string):Promise<string> => {
+export const generateCodeLibrary = async (parameters: any, outputName: string, status: string):Promise<void> => {
     for (const pattern of unsafeDirPatterns) {
         if (outputName.includes(pattern)) {
             throw new Error('Unsafe directory pattern detected');
@@ -68,6 +67,9 @@ export const generateCodeLibrary = async (parameters: any, outputName: string, s
         promises.push(generateSolidityVerifier(circuitOutputDir, outputDir, outputName, parameters.name, logPath));
     }
     await Promise.all(promises);
+}
+
+export const generateZip = async (outputName: string): Promise<string> => {
     const zipFile = path.join(outputDir, `${outputName}-example.zip`);
     return await zipDirectory(path.join(outputDir, outputName), zipFile)
 }

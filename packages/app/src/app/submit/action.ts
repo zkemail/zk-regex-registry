@@ -3,8 +3,7 @@ import { z } from 'zod';
 import { formSchema } from './form';
 import prisma from '@/lib/prisma';
 
-export async function createEntry(values: z.infer<typeof formSchema>) {
-
+export async function createEntry(values: z.infer<typeof formSchema>, draft = false) {
     const entry = {
         title: values.title,
         slug: values.slug,
@@ -15,11 +14,12 @@ export async function createEntry(values: z.infer<typeof formSchema>) {
             ...values.parameters,
             version: values.useNewSdk ? "v2" : "v1",
         },
-        emailQuery: values.emailQuery
+        emailQuery: values.emailQuery,
+        status: draft ? "DRAFT" : "PENDING",
     }
 
     try {
-        const createdEntry = await prisma.entry.create({data: entry})
+        const createdEntry = await prisma.entry.create({ data: entry })
         return {
             error: false,
             message: createdEntry
