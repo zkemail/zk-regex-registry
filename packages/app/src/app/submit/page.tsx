@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { createEntry } from './action';
 import { formSchema } from './form';
 
-export default function Submit({searchParams: {sampleEmail}}: {searchParams: {sampleEmail: string}}) {
+export default function Submit() {
 
     const [modal, setModal] = useState<boolean>(false);
     const [modalMessage, setModalMessage] = useState<string>("");
@@ -67,7 +67,7 @@ export default function Submit({searchParams: {sampleEmail}}: {searchParams: {sa
                     <div className="flex text-left justify-center items-center gap-4 flex-col px-10 md:px-40">
                         <h1 className="text-xl md:text-3xl tracking-tighter text-left font-extrabold">Submit new pattern</h1>
                         <Button className="mb-6" variant="secondary" size="sm" onClick={fillDemo}>Fill form using a sample</Button>
-                        <EntryForm entry={entry} onFormSubmit={onSubmit} sampleEmailFlag={sampleEmail ? true : false}/>
+                        <EntryForm entry={entry} onFormSubmit={onSubmit}/>
                     </div>
                 </div>
             </div>

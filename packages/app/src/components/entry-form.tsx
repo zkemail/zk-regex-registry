@@ -19,7 +19,6 @@ import { processEmail, ProcessEmailResult } from "@/app/submit/email/action";
 interface EntryFormProps {
     onFormSubmit: (values: z.infer<typeof formSchema>) => void,
     entry?: Entry,
-    sampleEmailFlag?: boolean,
 }
 
 interface Email {
@@ -28,7 +27,7 @@ interface Email {
     subject: string,
 }
 
-export function EntryForm({ onFormSubmit, entry, sampleEmailFlag }: EntryFormProps) {
+export function EntryForm({ onFormSubmit, entry }: EntryFormProps) {
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -644,29 +643,27 @@ export function EntryForm({ onFormSubmit, entry, sampleEmailFlag }: EntryFormPro
                         </div>
                     )
                 })}
-                {sampleEmailFlag && (
-                    <div className="flex flex-col">
-                        <div className="flex flex-row items-center">
-                            <b>Select a sample email</b>
-                            <Input className='ml-2 mr-4' type="file" onChange={e => uploadEmail(e)} />
-                            <Button type="button" onClick={process} disabled={!email || isProcessingEmail}>{isProcessingEmail ? "Processing..." : "Process"}</Button>
-                        </div>
-                        {(processedResult && email) && <div className="mt-4">
-                            {processedResult && processedResult.error && <p className="text-red-500">{processedResult.message}</p>}
-                            {processedResult && !processedResult.error && <div className="mt-4">
-                                <p>{processedResult.message}</p>
-                                <p><b>Matched Data:</b></p>
-                                {processedResult.matches.map((v, i) => {
-                                    return <p className="ml-4" key={i}><b>{v.name}:</b> {v.match}</p>
-                                })}
-                                <p><b>Calculated Parameters:</b> <a className="text-blue-500" onClick={setProcessedParameters} href="#">Click to update the pattern above</a></p>
-                                {Object.keys(processedResult.parameters || {}).map((v, i) => {
-                                    return <p className="ml-4" key={i}><b>{v}:</b> {(processedResult.parameters as any)[v] ?? "N/A"}</p>
-                                })}
-                            </div>}
-                        </div>}
+                <div className="flex flex-col">
+                    <div className="flex flex-row items-center">
+                        <b>Select a sample email</b>
+                        <Input className='ml-2 mr-4' type="file" onChange={e => uploadEmail(e)} />
+                        <Button type="button" onClick={process} disabled={!email || isProcessingEmail}>{isProcessingEmail ? "Processing..." : "Process"}</Button>
                     </div>
-                )}
+                    {(processedResult && email) && <div className="mt-4">
+                        {processedResult && processedResult.error && <p className="text-red-500">{processedResult.message}</p>}
+                        {processedResult && !processedResult.error && <div className="mt-4">
+                            <p>{processedResult.message}</p>
+                            <p><b>Matched Data:</b></p>
+                            {processedResult.matches.map((v, i) => {
+                                return <p className="ml-4" key={i}><b>{v.name}:</b> {v.match}</p>
+                            })}
+                            <p><b>Calculated Parameters:</b> <a className="text-blue-500" onClick={setProcessedParameters} href="#">Click to update the pattern above</a></p>
+                            {Object.keys(processedResult.parameters || {}).map((v, i) => {
+                                return <p className="ml-4" key={i}><b>{v}:</b> {(processedResult.parameters as any)[v] ?? "N/A"}</p>
+                            })}
+                        </div>}
+                    </div>}
+                </div>
                 <div className="flex flex-col items-center">
                     <Button type="submit" size="lg" onClick={form.handleSubmit(onFormSubmit)} >Submit</Button>
                 </div>
