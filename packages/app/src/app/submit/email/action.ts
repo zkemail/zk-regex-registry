@@ -7,7 +7,6 @@ import { verifyDKIMSignature } from "@zk-email/helpers/dist/dkim";
 export interface ProcessEmailResult {
     error: boolean,
     message: string,
-    inputs?: any,
     parameters?: {
         maxHeaderLength: number,
         maxBodyLength?: number,
@@ -131,13 +130,9 @@ export async function processEmail(values: z.infer<typeof formSchema>, email: st
             message: "Error generating code: " + e.toString()
         }
     }
-    const inputGeneration = await import(`/Users/javiersuweijie/Projects/zk/zk-regex-registry-app/packages/app/output/code/drafts/${values.slug}/lib/generate_inputs.js`)
-    const inputs = await inputGeneration.generateCircuitInputs(email)
-    console.log("inputs", inputs)
     return {
         error: false,
         message: "Email processed successfully",
-        inputs,
         parameters: res,
         matches,
     }

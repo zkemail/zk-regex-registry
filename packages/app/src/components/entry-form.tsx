@@ -58,6 +58,7 @@ export function EntryForm({ onFormSubmit, entry, sampleEmailFlag }: EntryFormPro
     const { fields, append, remove } = useFieldArray({ control: form.control, name: "parameters.values" })
     const { fields: externalInputs, append: appendInput, remove: removeInput } = useFieldArray({ control: form.control, name: "parameters.externalInputs" })
     const [email, setEmail] = useState<Email | null>(null);
+    const [isProcessingEmail, setIsProcessingEmail] = useState(false);
     const [processedResult, setProcessedResult] = useState<ProcessEmailResult | null>(null);
 
     useEffect(() => {
@@ -275,13 +276,54 @@ export function EntryForm({ onFormSubmit, entry, sampleEmailFlag }: EntryFormPro
         }
     }
 
+    async function createInputWorker(name: string): Promise<Worker> {
+        const res = await fetch(`/api/script/circuit_input/${name}`, {
+            headers: {
+                'Accept': 'text/javascript'
+            }
+        });
+
+        const js = await res.text();
+        const w = new Worker(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+        return w;
+    }
+
+    async function generateInputFromEmail(worker: Worker, name: string, email: string, externalInputs: Record<string, string>) {
+        return new Promise((resolve, reject) => {
+            worker.onmessage = (event: any) => {
+                if (event.data.error) {
+                    reject(event.data.error);
+                } else {
+                    resolve(event.data);
+                }
+            }
+
+            worker.postMessage({
+                rawEmail: email,
+                inputs: externalInputs
+            });
+        });
+    }
+
     function process(e: BaseSyntheticEvent) {
         if (email) {
-            console.log("Processing email")
+            setIsProcessingEmail(true);
             form.handleSubmit(async (e) => {
                 const result = await processEmail(e, email.contents)
-                console.log("result", result, processedResult);
                 setProcessedResult(result)
+                const slug = "drafts/"+form.getValues("slug");
+                const w = await createInputWorker(slug)
+                try {
+                    const input = await generateInputFromEmail(w, slug, email.contents, {})
+                    console.log("input", input)
+                } catch (e) {
+                    setProcessedResult({
+                        ...result,
+                        error: true,
+                        message: `Failed to generate circuit input: ${e}`,
+                    })
+                }
+                setIsProcessingEmail(false);
             })();
         }
     }
@@ -607,7 +649,7 @@ export function EntryForm({ onFormSubmit, entry, sampleEmailFlag }: EntryFormPro
                         <div className="flex flex-row items-center">
                             <b>Select a sample email</b>
                             <Input className='ml-2 mr-4' type="file" onChange={e => uploadEmail(e)} />
-                            <Button type="button" onClick={process} disabled={!email}>Process</Button>
+                            <Button type="button" onClick={process} disabled={!email || isProcessingEmail}>{isProcessingEmail ? "Processing..." : "Process"}</Button>
                         </div>
                         {(processedResult && email) && <div className="mt-4">
                             {processedResult && processedResult.error && <p className="text-red-500">{processedResult.message}</p>}
@@ -617,7 +659,7 @@ export function EntryForm({ onFormSubmit, entry, sampleEmailFlag }: EntryFormPro
                                 {processedResult.matches.map((v, i) => {
                                     return <p className="ml-4" key={i}><b>{v.name}:</b> {v.match}</p>
                                 })}
-                                <p><b>External Parameters:</b> <a className="text-blue-500" onClick={setProcessedParameters} href="#">Click to update parameters above</a></p>
+                                <p><b>Calculated Parameters:</b> <a className="text-blue-500" onClick={setProcessedParameters} href="#">Click to update the pattern above</a></p>
                                 {Object.keys(processedResult.parameters || {}).map((v, i) => {
                                     return <p className="ml-4" key={i}><b>{v}:</b> {(processedResult.parameters as any)[v] ?? "N/A"}</p>
                                 })}
