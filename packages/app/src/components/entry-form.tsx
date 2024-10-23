@@ -12,14 +12,23 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { formSchema } from "@/app/submit/form";
 import { BodyPattern, FromAddressPattern, HeaderPattern, SubjectPattern, TimestampPattern, ToAddressPattern } from "@/app/submit/patterns";
 import { Entry } from "@prisma/client";
-import { useEffect, useState } from "react";
+import { BaseSyntheticEvent, FormEvent, useEffect, useState } from "react";
+import PostalMime from "postal-mime";
+import { processEmail, ProcessEmailResult } from "@/app/submit/email/action";
 
 interface EntryFormProps {
     onFormSubmit: (values: z.infer<typeof formSchema>) => void,
     entry?: Entry,
+    sampleEmailFlag?: boolean,
 }
 
-export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
+interface Email {
+    contents: string,
+    internalDate: number,
+    subject: string,
+}
+
+export function EntryForm({ onFormSubmit, entry, sampleEmailFlag }: EntryFormProps) {
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -46,8 +55,11 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
         },
     })
 
-    const { fields, append, remove } = useFieldArray({control: form.control, name: "parameters.values"})
-    const { fields: externalInputs, append: appendInput, remove: removeInput } = useFieldArray({control: form.control, name: "parameters.externalInputs"})
+    const { fields, append, remove } = useFieldArray({ control: form.control, name: "parameters.values" })
+    const { fields: externalInputs, append: appendInput, remove: removeInput } = useFieldArray({ control: form.control, name: "parameters.externalInputs" })
+    const [email, setEmail] = useState<Email | null>(null);
+    const [isProcessingEmail, setIsProcessingEmail] = useState(false);
+    const [processedResult, setProcessedResult] = useState<ProcessEmailResult | null>(null);
 
     useEffect(() => {
         if (entry) {
@@ -240,314 +252,425 @@ export function EntryForm( {onFormSubmit, entry}: EntryFormProps) {
         } else {
         }
     }
-    
+
+    function uploadEmail(e: FormEvent<HTMLInputElement>) {
+        if (e.currentTarget.files) {
+            for (let i = 0; i < e.currentTarget.files.length; i++) {
+                const file = e.currentTarget.files[i];
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const contents = e.target?.result;
+                    if (typeof contents === "string") {
+                        const parsed = await PostalMime.parse(contents)
+                        console.log(parsed);
+                        const email = {
+                            contents,
+                            internalDate: (parsed.date ? Date.parse(parsed.date) : file.lastModified),
+                            subject: parsed.subject || file.name,
+                        }
+                        setEmail(email);
+                    }
+                }
+                reader.readAsText(file);
+            }
+        }
+    }
+
+    async function createInputWorker(name: string): Promise<Worker> {
+        const res = await fetch(`/api/script/circuit_input/${name}`, {
+            headers: {
+                'Accept': 'text/javascript'
+            }
+        });
+
+        const js = await res.text();
+        const w = new Worker(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+        return w;
+    }
+
+    async function generateInputFromEmail(worker: Worker, name: string, email: string, externalInputs: Record<string, string>) {
+        return new Promise((resolve, reject) => {
+            worker.onmessage = (event: any) => {
+                if (event.data.error) {
+                    reject(event.data.error);
+                } else {
+                    resolve(event.data);
+                }
+            }
+
+            worker.postMessage({
+                rawEmail: email,
+                inputs: externalInputs
+            });
+        });
+    }
+
+    function process(e: BaseSyntheticEvent) {
+        if (email) {
+            setIsProcessingEmail(true);
+            form.handleSubmit(async (e) => {
+                const result = await processEmail(e, email.contents)
+                setProcessedResult(result)
+                const slug = "drafts/"+form.getValues("slug");
+                const w = await createInputWorker(slug)
+                try {
+                    const input = await generateInputFromEmail(w, slug, email.contents, {})
+                    console.log("input", input)
+                } catch (e) {
+                    setProcessedResult({
+                        ...result,
+                        error: true,
+                        message: `Failed to generate circuit input: ${e}`,
+                    })
+                }
+                setIsProcessingEmail(false);
+            })();
+        }
+    }
+
+    function setProcessedParameters() {
+        if (processedResult?.parameters) {
+            // set domain, selector, maxBodyLength, maxHeaderLength in form
+            if (processedResult.parameters.domain) form.setValue("parameters.senderDomain", processedResult.parameters.domain)
+            if (processedResult.parameters.selector) form.setValue("parameters.dkimSelector", processedResult.parameters.selector)
+            if (processedResult.parameters.maxBodyLength) form.setValue("parameters.emailBodyMaxLength", processedResult.parameters.maxBodyLength)
+            if (processedResult.parameters.maxHeaderLength) form.setValue("parameters.emailHeaderMaxLength", processedResult.parameters.maxHeaderLength)
+        }
+    }
+
     return (
         <Form {...form}>
-        <form onSubmit={form.handleSubmit(submit)} className="space-y-8 w-full" id="edit-form">
-            <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Pattern Title</FormLabel>
-                        <FormControl>
-                            <Input placeholder="Proof of Twitter" {...field} />
-                        </FormControl>
-                        <FormDescription></FormDescription>
-                        <FormMessage />
-                    </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                            <Textarea placeholder="" {...field} />
-                        </FormControl>
-                        <FormDescription></FormDescription>
-                        <FormMessage />
-                    </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="slug"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Slug</FormLabel>
-                        <FormControl>
-                            <Input placeholder="author/name-of-pattern" {...field} />
-                        </FormControl>
-                        <FormDescription></FormDescription>
-                        <FormMessage />
-                    </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="tags"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Tags</FormLabel>
-                        <FormControl>
-                            <Input placeholder="email,identity" {...field} />
-                        </FormControl>
-                        <FormDescription>Separated by commas ,</FormDescription>
-                        <FormMessage />
-                    </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="emailQuery"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Email Query</FormLabel>
-                        <FormControl>
-                            <Input placeholder="Password reset request from: info@x.com" {...field} />
-                        </FormControl>
-                        <FormDescription>As if you were searching for the email in your Gmail inbox. Only emails matching this query will be shown to the user to prove when they sign in with Gmail.</FormDescription>
-                        <FormMessage />
-                    </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="parameters.name"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Circuit Name</FormLabel>
-                        <FormControl>
-                            <Input placeholder="" {...field} />
-                        </FormControl>
-                        <FormDescription>e.g CircuitName (without the .circom extension)</FormDescription>
-                        <FormMessage></FormMessage>
-                    </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="parameters.ignoreBodyHashCheck"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Skip body hash check?</FormLabel>
-                        <FormControl>
-                            <Checkbox className="ml-2" checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                        <FormDescription>Enable to ignore the contents on the email and only extract data from the headers</FormDescription>
-                        <FormMessage></FormMessage>
-                    </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="parameters.enableMasking"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Enable email masking?</FormLabel>
-                        <FormControl>
-                            <Checkbox className="ml-2" checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                        <FormDescription>Enable and send a mask to return a masked email in the public output. We recommend to disable this for most patterns.</FormDescription>
-                        <FormMessage></FormMessage>
-                    </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="parameters.senderDomain"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Email sender domain</FormLabel>
-                        <FormControl>
-                            <Input placeholder="x.com" {...field} />
-                        </FormControl>
-                        <FormDescription>This is the domain used for DKIM verification, which may not exactly match the senders domain (you can check via the d= field in the DKIM-Signature header). Note to only include the part after the @ symbol.</FormDescription>
-                        <FormMessage></FormMessage>
-                    </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="parameters.dkimSelector"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>DKIM Selector (Optional)</FormLabel>
-                        <FormControl>
-                            <Input placeholder="dkim" {...field} />
-                        </FormControl>
-                        <FormDescription>(Optional) DKIM selector that is found in the email header. If not specified, it will be fetched automatically.</FormDescription>
-                        <FormMessage></FormMessage>
-                    </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="parameters.shaPrecomputeSelector"
-                render={({ field, formState }) => (
-                    <FormItem>
-                        <FormLabel>Email Body Cutoff Value (Optional)</FormLabel>
-                        <FormControl>
-                            <Input disabled={form.getValues("parameters.ignoreBodyHashCheck")} {...field} />
-                        </FormControl>
-                        <FormDescription>We will cut-off the part of the email body before this value, so that we only compute the regex on the email body after this value. This is to reduce the number of constraints in the circuit for long email bodies where only regex matches at the end matter.</FormDescription>
-                        <FormMessage></FormMessage>
-                    </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="parameters.emailHeaderMaxLength"
-                render={({ field, formState }) => (
-                    <FormItem>
-                        <FormLabel>Max Email Header Length</FormLabel>
-                        <FormControl>
-                            <Input type="number" {...field} />
-                        </FormControl>
-                        <FormDescription>Must be a multiple of 64.</FormDescription>
-                        <FormMessage></FormMessage>
-                    </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="parameters.emailBodyMaxLength"
-                render={({ field, formState }) => (
-                    <FormItem>
-                        <FormLabel>Max Email Body Length</FormLabel>
-                        <FormControl>
-                            <Input type="number" disabled={form.getValues("parameters.ignoreBodyHashCheck")} {...field} />
-                        </FormControl>
-                        <FormDescription>Must be a multiple of 64. If you have a Email Body Cutoff Value, it should be the length of the body after that value.</FormDescription>
-                        <FormMessage></FormMessage>
-                    </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="useNewSdk"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Use new ZK Regex SDK for circuit generation (Recommended)</FormLabel>
-                        <FormControl>
-                            <Checkbox className="ml-2" checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                        <FormDescription></FormDescription>
-                        <FormMessage></FormMessage>
-                    </FormItem>
-                )}
-            />
-            <div className="flex flex-row items-center">
-                <b>Fields to Extract</b>
-                <Button type="button" onClick={() => addValueObject()} variant="outline" className="ml-4"><Plus color="green"/>Add new value to extract</Button>
-            </div>
-            {fields.map((v, i) => {
-                return (
-                    <div className='pl-8 pb-4' key={v.id}>
-                        <div className="flex flex-row items-center"><b>Field #{i + 1}</b>{(maskingEnabled || i !== 0) && <Trash color="red" className="ml-2" onClick={() => removeValueObject(i)}/>}</div>
-                        <FormField
-                            control={form.control}
-                            name={`parameters.values.${i}.name`}
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Field Name</FormLabel>
-                                    <FormControl>
-                                        <Input {...field} />
-                                    </FormControl>
-                                    <FormDescription></FormDescription>
-                                    <FormMessage></FormMessage>
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name={`parameters.values.${i}.location`}
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Data Location</FormLabel>
-                                    <FormControl>
-                                        <Select value={field.value} onValueChange={ v => {form.setValue(`parameters.values.${i}.location`, v); autoFillRegex(i, v); }}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="body" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    <SelectLabel>Location</SelectLabel>
-                                                    <SelectItem value="body">Email Body</SelectItem>
-                                                    <SelectItem value="header">Email Header</SelectItem>
-                                                    <SelectItem value="from">Sender</SelectItem>
-                                                    <SelectItem value="to">Recepient</SelectItem>
-                                                    <SelectItem value="subject">Subject</SelectItem>
-                                                    <SelectItem value="timestamp">Timestamp</SelectItem>
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                    </FormControl>
-                                    <FormMessage></FormMessage>
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name={`parameters.values.${i}.maxLength`}
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Max length of extracted data</FormLabel>
-                                    <FormControl>
-                                        <Input type="number" {...field} />
-                                    </FormControl>
-                                    <FormDescription></FormDescription>
-                                    <FormMessage></FormMessage>
-                                </FormItem>
-                            )}
-                        />
-                        {displayValueForm(i)}
+            <form onSubmit={form.handleSubmit(submit)} className="space-y-8 w-full" id="edit-form">
+                <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Pattern Title</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Proof of Twitter" {...field} />
+                            </FormControl>
+                            <FormDescription></FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Description</FormLabel>
+                            <FormControl>
+                                <Textarea placeholder="" {...field} />
+                            </FormControl>
+                            <FormDescription></FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="slug"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Slug</FormLabel>
+                            <FormControl>
+                                <Input placeholder="author/name-of-pattern" {...field} />
+                            </FormControl>
+                            <FormDescription></FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="tags"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Tags</FormLabel>
+                            <FormControl>
+                                <Input placeholder="email,identity" {...field} />
+                            </FormControl>
+                            <FormDescription>Separated by commas ,</FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="emailQuery"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Email Query</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Password reset request from: info@x.com" {...field} />
+                            </FormControl>
+                            <FormDescription>As if you were searching for the email in your Gmail inbox. Only emails matching this query will be shown to the user to prove when they sign in with Gmail.</FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="parameters.name"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Circuit Name</FormLabel>
+                            <FormControl>
+                                <Input placeholder="" {...field} />
+                            </FormControl>
+                            <FormDescription>e.g CircuitName (without the .circom extension)</FormDescription>
+                            <FormMessage></FormMessage>
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="parameters.ignoreBodyHashCheck"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Skip body hash check?</FormLabel>
+                            <FormControl>
+                                <Checkbox className="ml-2" checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                            <FormDescription>Enable to ignore the contents on the email and only extract data from the headers</FormDescription>
+                            <FormMessage></FormMessage>
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="parameters.enableMasking"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Enable email masking?</FormLabel>
+                            <FormControl>
+                                <Checkbox className="ml-2" checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                            <FormDescription>Enable and send a mask to return a masked email in the public output. We recommend to disable this for most patterns.</FormDescription>
+                            <FormMessage></FormMessage>
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="parameters.senderDomain"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Email sender domain</FormLabel>
+                            <FormControl>
+                                <Input placeholder="x.com" {...field} />
+                            </FormControl>
+                            <FormDescription>This is the domain used for DKIM verification, which may not exactly match the senders domain (you can check via the d= field in the DKIM-Signature header). Note to only include the part after the @ symbol.</FormDescription>
+                            <FormMessage></FormMessage>
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="parameters.dkimSelector"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>DKIM Selector (Optional)</FormLabel>
+                            <FormControl>
+                                <Input placeholder="dkim" {...field} />
+                            </FormControl>
+                            <FormDescription>(Optional) DKIM selector that is found in the email header. If not specified, it will be fetched automatically.</FormDescription>
+                            <FormMessage></FormMessage>
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="parameters.shaPrecomputeSelector"
+                    render={({ field, formState }) => (
+                        <FormItem>
+                            <FormLabel>Email Body Cutoff Value (Optional)</FormLabel>
+                            <FormControl>
+                                <Input disabled={form.getValues("parameters.ignoreBodyHashCheck")} {...field} />
+                            </FormControl>
+                            <FormDescription>We will cut-off the part of the email body before this value, so that we only compute the regex on the email body after this value. This is to reduce the number of constraints in the circuit for long email bodies where only regex matches at the end matter.</FormDescription>
+                            <FormMessage></FormMessage>
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="parameters.emailHeaderMaxLength"
+                    render={({ field, formState }) => (
+                        <FormItem>
+                            <FormLabel>Max Email Header Length</FormLabel>
+                            <FormControl>
+                                <Input type="number" {...field} />
+                            </FormControl>
+                            <FormDescription>Must be a multiple of 64.</FormDescription>
+                            <FormMessage></FormMessage>
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="parameters.emailBodyMaxLength"
+                    render={({ field, formState }) => (
+                        <FormItem>
+                            <FormLabel>Max Email Body Length</FormLabel>
+                            <FormControl>
+                                <Input type="number" disabled={form.getValues("parameters.ignoreBodyHashCheck")} {...field} />
+                            </FormControl>
+                            <FormDescription>Must be a multiple of 64. If you have a Email Body Cutoff Value, it should be the length of the body after that value.</FormDescription>
+                            <FormMessage></FormMessage>
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="useNewSdk"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Use new ZK Regex SDK for circuit generation (Recommended)</FormLabel>
+                            <FormControl>
+                                <Checkbox className="ml-2" checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                            <FormDescription></FormDescription>
+                            <FormMessage></FormMessage>
+                        </FormItem>
+                    )}
+                />
+                <div className="flex flex-row items-center">
+                    <b>Fields to Extract</b>
+                    <Button type="button" onClick={() => addValueObject()} variant="outline" className="ml-4"><Plus color="green" />Add new value to extract</Button>
+                </div>
+                {fields.map((v, i) => {
+                    return (
+                        <div className='pl-8 pb-4' key={v.id}>
+                            <div className="flex flex-row items-center"><b>Field #{i + 1}</b>{(maskingEnabled || i !== 0) && <Trash color="red" className="ml-2" onClick={() => removeValueObject(i)} />}</div>
+                            <FormField
+                                control={form.control}
+                                name={`parameters.values.${i}.name`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Field Name</FormLabel>
+                                        <FormControl>
+                                            <Input {...field} />
+                                        </FormControl>
+                                        <FormDescription></FormDescription>
+                                        <FormMessage></FormMessage>
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name={`parameters.values.${i}.location`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Data Location</FormLabel>
+                                        <FormControl>
+                                            <Select value={field.value} onValueChange={v => { form.setValue(`parameters.values.${i}.location`, v); autoFillRegex(i, v); }}>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="body" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectGroup>
+                                                        <SelectLabel>Location</SelectLabel>
+                                                        <SelectItem value="body">Email Body</SelectItem>
+                                                        <SelectItem value="header">Email Header</SelectItem>
+                                                        <SelectItem value="from">Sender</SelectItem>
+                                                        <SelectItem value="to">Recepient</SelectItem>
+                                                        <SelectItem value="subject">Subject</SelectItem>
+                                                        <SelectItem value="timestamp">Timestamp</SelectItem>
+                                                    </SelectGroup>
+                                                </SelectContent>
+                                            </Select>
+                                        </FormControl>
+                                        <FormMessage></FormMessage>
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name={`parameters.values.${i}.maxLength`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Max length of extracted data</FormLabel>
+                                        <FormControl>
+                                            <Input type="number" {...field} />
+                                        </FormControl>
+                                        <FormDescription></FormDescription>
+                                        <FormMessage></FormMessage>
+                                    </FormItem>
+                                )}
+                            />
+                            {displayValueForm(i)}
+                        </div>
+                    )
+                })}
+                <div className="flex flex-row items-center">
+                    <b>External Inputs</b>
+                    <Button type="button" onClick={() => addExternalInputObject()} variant="outline" className="ml-4"><Plus color="green" />Add new value to extract</Button>
+                </div>
+                {externalInputs.map((v, i) => {
+                    return (
+                        <div className='pl-8 pb-4' key={v.id}>
+                            <div className="flex flex-row items-center"><b>Field #{i + 1}</b><Trash color="red" className="ml-2" onClick={() => removeExternalInputObject(i)} /></div>
+                            <FormField
+                                control={form.control}
+                                name={`parameters.externalInputs.${i}.name`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Field Name</FormLabel>
+                                        <FormControl>
+                                            <Input {...field} />
+                                        </FormControl>
+                                        <FormDescription></FormDescription>
+                                        <FormMessage></FormMessage>
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name={`parameters.externalInputs.${i}.maxLength`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Max length of input</FormLabel>
+                                        <FormControl>
+                                            <Input type="number" {...field} />
+                                        </FormControl>
+                                        <FormDescription></FormDescription>
+                                        <FormMessage></FormMessage>
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    )
+                })}
+                {sampleEmailFlag && (
+                    <div className="flex flex-col">
+                        <div className="flex flex-row items-center">
+                            <b>Select a sample email</b>
+                            <Input className='ml-2 mr-4' type="file" onChange={e => uploadEmail(e)} />
+                            <Button type="button" onClick={process} disabled={!email || isProcessingEmail}>{isProcessingEmail ? "Processing..." : "Process"}</Button>
+                        </div>
+                        {(processedResult && email) && <div className="mt-4">
+                            {processedResult && processedResult.error && <p className="text-red-500">{processedResult.message}</p>}
+                            {processedResult && !processedResult.error && <div className="mt-4">
+                                <p>{processedResult.message}</p>
+                                <p><b>Matched Data:</b></p>
+                                {processedResult.matches.map((v, i) => {
+                                    return <p className="ml-4" key={i}><b>{v.name}:</b> {v.match}</p>
+                                })}
+                                <p><b>Calculated Parameters:</b> <a className="text-blue-500" onClick={setProcessedParameters} href="#">Click to update the pattern above</a></p>
+                                {Object.keys(processedResult.parameters || {}).map((v, i) => {
+                                    return <p className="ml-4" key={i}><b>{v}:</b> {(processedResult.parameters as any)[v] ?? "N/A"}</p>
+                                })}
+                            </div>}
+                        </div>}
                     </div>
-                )
-            })}
-            <div className="flex flex-row items-center">
-                <b>External Inputs</b>
-                <Button type="button" onClick={() => addExternalInputObject()} variant="outline" className="ml-4"><Plus color="green"/>Add new value to extract</Button>
-            </div>
-            {externalInputs.map((v, i) => {
-                return (
-                    <div className='pl-8 pb-4' key={v.id}>
-                        <div className="flex flex-row items-center"><b>Field #{i + 1}</b><Trash color="red" className="ml-2" onClick={() => removeExternalInputObject(i)}/></div>
-                        <FormField
-                            control={form.control}
-                            name={`parameters.externalInputs.${i}.name`}
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Field Name</FormLabel>
-                                    <FormControl>
-                                        <Input {...field} />
-                                    </FormControl>
-                                    <FormDescription></FormDescription>
-                                    <FormMessage></FormMessage>
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name={`parameters.externalInputs.${i}.maxLength`}
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Max length of input</FormLabel>
-                                    <FormControl>
-                                        <Input type="number" {...field} />
-                                    </FormControl>
-                                    <FormDescription></FormDescription>
-                                    <FormMessage></FormMessage>
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-                )})}
-            <Button type="submit">Submit</Button>
-        </form>
-    </Form>
+                )}
+                <div className="flex flex-col items-center">
+                    <Button type="submit" size="lg" onClick={form.handleSubmit(onFormSubmit)} >Submit</Button>
+                </div>
+            </form>
+        </Form>
     )
 }
