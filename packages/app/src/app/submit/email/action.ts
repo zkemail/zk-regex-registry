@@ -46,6 +46,7 @@ export async function processEmail(values: z.infer<typeof formSchema>, email: st
     }
     if (!values.parameters.ignoreBodyHashCheck) {
         bodyString = result.body.toString();
+        let splitBodyString = bodyString;
         if (values.parameters.shaPrecomputeSelector) {
             const split = bodyString.split(values.parameters.shaPrecomputeSelector);
             if (split.length > 2) {
@@ -62,12 +63,12 @@ export async function processEmail(values: z.infer<typeof formSchema>, email: st
                     message: "Email body cut-off value is not found in the email body."
                 }
             }
-            const bodyLength = split[1].length;
-            const maxBodyLength = Math.ceil(bodyLength / 64) * 64;
-            res = {
-                ...res,
-                maxBodyLength,
-            }
+            splitBodyString = split[1];
+        }
+        const maxBodyLength = Math.ceil(splitBodyString.length / 64) * 64;
+        res = {
+            ...res,
+            maxBodyLength,
         }
     }
 
