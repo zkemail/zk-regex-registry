@@ -36,7 +36,7 @@ export async function processEmail(values: z.infer<typeof formSchema>, email: st
     }
     headerString = result.headers.toString();
     const headerLength = result.headers.length;
-    const maxHeaderLength = Math.ceil(headerLength / 64) * 64;
+    const maxHeaderLength = (Math.ceil(headerLength / 64) + 2) * 64;
     const domain = result.signingDomain;
     const selector = result.selector;
     res = {
@@ -65,7 +65,7 @@ export async function processEmail(values: z.infer<typeof formSchema>, email: st
             }
             splitBodyString = split[1];
         }
-        const maxBodyLength = Math.ceil(splitBodyString.length / 64) * 64;
+        const maxBodyLength = (Math.ceil(splitBodyString.length / 64) + 2) * 64;
         res = {
             ...res,
             maxBodyLength,
