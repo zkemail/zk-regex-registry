@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { formSchema } from '../form';
 import { generateCodeLibrary } from '@/lib/code-gen/gen';
 import { verifyDKIMSignature } from "@zk-email/helpers/dist/dkim";
+import { extractMatches, extractMatchesWasm, Values } from '@/lib/regex';
 
 export interface ProcessEmailResult {
     error: boolean,
@@ -73,7 +74,7 @@ export async function processEmail(values: z.infer<typeof formSchema>, email: st
     }
 
     // Apply regex
-    const matches = extractMatches(headerString, bodyString, values.parameters.values as Values[]);
+    const matches = await extractMatchesWasm(headerString, bodyString, values.parameters.values as Values[]);
 
     const parameters = {
         ...values.parameters,
@@ -94,62 +95,4 @@ export async function processEmail(values: z.infer<typeof formSchema>, email: st
         parameters: res,
         matches,
     }
-}
-
-interface Values {
-    name: string,
-    location: "header" | "body",
-    parts: {
-        regex_def: string,
-        is_public: boolean,
-    }[],
-}
-
-function extractMatches(headerString: string, bodyString: string | undefined, values: Values[]) {
-    const regexes = values.map((v: any) => {
-        let publicGroups: number[] = [];
-        let index = 1;
-        const regex = v.parts.reduce((acc: any, part: any) => {
-            if (part.regex_def.match(/\([^\)]+/)) index++;
-            if (part.is_public) {
-                publicGroups.push(index);
-                index++;
-                return acc + "(" + part.regex_def + ")"
-            } 
-            return acc + part.regex_def
-        }, "");
-        return {
-            regex,
-            publicGroups,
-            name: v.name,
-            location: v.location,
-        }
-    })
-
-    let matches = []
-
-    for (const regex of regexes) {
-        if (regex.location == "body" && bodyString) {
-            const match = bodyString.match(regex.regex)
-            if (match) {
-                for (const group of regex.publicGroups) {
-                    matches.push({
-                        name: regex.name,
-                        match: match[group],
-                    })
-                }
-            }
-        } else {
-            const match = headerString.match(regex.regex)
-            if (match) {
-                for (const group of regex.publicGroups) {
-                    matches.push({
-                        name: regex.name,
-                        match: match[group],
-                    })
-                }
-            }
-        }
-    }
-    return matches;
 }

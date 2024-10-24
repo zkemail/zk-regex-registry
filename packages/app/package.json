@@ -27,6 +27,7 @@
     "@zk-email/circuits": "6.1.1",
     "@zk-email/helpers": "6.1.1",
     "@zk-email/zk-email-sdk": "^1.0.5",
+    "@zk-email/relayer-utils": "^0.4.2",
     "archiver": "^7.0.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
