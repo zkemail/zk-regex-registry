@@ -430,6 +430,7 @@ export function PageContent(props: ContentProps) {
                                 <h2 className="text-3xl md:text-5xl tracking-tighter text-left font-extrabold mb-6">
                                     {entry.slug}
                                 </h2>
+                                <p>{entry.description}</p>
                                 <h4 className="text-xl md:text-2xl tracking-tighter text-left font-extrabold mb-4 mt-4">
                                     Step 1: Provide an email sample
                                 </h4>
