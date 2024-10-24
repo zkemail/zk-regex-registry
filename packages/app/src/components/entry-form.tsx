@@ -254,6 +254,7 @@ export function EntryForm({ onFormSubmit, entry }: EntryFormProps) {
 
     function uploadEmail(e: FormEvent<HTMLInputElement>) {
         if (e.currentTarget.files) {
+            setIsProcessingEmail(false);
             for (let i = 0; i < e.currentTarget.files.length; i++) {
                 const file = e.currentTarget.files[i];
                 const reader = new FileReader();
@@ -543,7 +544,7 @@ export function EntryForm({ onFormSubmit, entry }: EntryFormProps) {
                 {fields.map((v, i) => {
                     return (
                         <div className='pl-8 pb-4' key={v.id}>
-                            <div className="flex flex-row items-center"><b>Field #{i + 1}</b>{(maskingEnabled || i !== 0) && <Trash color="red" className="ml-2" onClick={() => removeValueObject(i)} />}</div>
+                            <div className="flex flex-row items-center"><b>Field #{i + 1}</b> <Trash color="red" className="ml-2" onClick={() => removeValueObject(i)} /></div>
                             <FormField
                                 control={form.control}
                                 name={`parameters.values.${i}.name`}
