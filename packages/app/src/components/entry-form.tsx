@@ -309,17 +309,26 @@ export function EntryForm({ onFormSubmit, entry }: EntryFormProps) {
         if (email) {
             setIsProcessingEmail(true);
             form.handleSubmit(async (e) => {
-                const result = await processEmail(e, email.contents)
-                setProcessedResult(result)
-                const slug = "drafts/"+form.getValues("slug");
-                const w = await createInputWorker(slug)
+                let result;
                 try {
-                    const input = await generateInputFromEmail(w, slug, email.contents, {})
-                    console.log("input", input)
+                    result = await processEmail(e, email.contents)
                 } catch (e) {
                     setProcessedResult({
-                        ...result,
                         error: true,
+                        matches: [],
+                        message: `Failed to process email: ${e}`,
+                    })
+                }
+                try {
+                    const slug = "drafts/"+form.getValues("slug");
+                    const w = await createInputWorker(slug)
+                    const input = await generateInputFromEmail(w, slug, email.contents, {})
+                    console.log("input", input)
+                    if (result) setProcessedResult(result)
+                } catch (e) {
+                    setProcessedResult({
+                        error: true,
+                        matches: [],
                         message: `Failed to generate circuit input: ${e}`,
                     })
                 }
