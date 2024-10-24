@@ -73,10 +73,44 @@ export async function processEmail(values: z.infer<typeof formSchema>, email: st
     }
 
     // Apply regex
-    const regexes = values.parameters.values.map((v: any) => {
+    const matches = extractMatches(headerString, bodyString, values.parameters.values as Values[]);
+
+    const parameters = {
+        ...values.parameters,
+        version: values.useNewSdk ? "v2" : "v1",
+    }
+    try {
+        await generateCodeLibrary(parameters, "drafts/" + values.slug, "DRAFT");
+    } catch (e: any) {
+        return {
+            error: true,
+            matches: [],
+            message: "Error generating code: " + e.toString()
+        }
+    }
+    return {
+        error: false,
+        message: "Email processed successfully",
+        parameters: res,
+        matches,
+    }
+}
+
+interface Values {
+    name: string,
+    location: "header" | "body",
+    parts: {
+        regex_def: string,
+        is_public: boolean,
+    }[],
+}
+
+function extractMatches(headerString: string, bodyString: string | undefined, values: Values[]) {
+    const regexes = values.map((v: any) => {
         let publicGroups: number[] = [];
         let index = 1;
         const regex = v.parts.reduce((acc: any, part: any) => {
+            if (part.regex_def.match(/\([^\)]+/)) index++;
             if (part.is_public) {
                 publicGroups.push(index);
                 index++;
@@ -117,24 +151,5 @@ export async function processEmail(values: z.infer<typeof formSchema>, email: st
             }
         }
     }
-
-    const parameters = {
-        ...values.parameters,
-        version: values.useNewSdk ? "v2" : "v1",
-    }
-    try {
-        await generateCodeLibrary(parameters, "drafts/" + values.slug, "DRAFT");
-    } catch (e: any) {
-        return {
-            error: true,
-            matches: [],
-            message: "Error generating code: " + e.toString()
-        }
-    }
-    return {
-        error: false,
-        message: "Email processed successfully",
-        parameters: res,
-        matches,
-    }
+    return matches;
 }
