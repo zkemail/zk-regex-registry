@@ -66,7 +66,7 @@ export function extractMatches(headerString: string, bodyString: string | undefi
 }
 
 export async function extractMatchesWasm(headerString: string, bodyString: string | undefined, values: Values[]) {
-    let ready = await wasmLoaded;
+    await wasmLoaded;
     let matches: {name: string, match: string}[] = [];
     for (const value of values) {
         if (value.location == "body" && bodyString) {

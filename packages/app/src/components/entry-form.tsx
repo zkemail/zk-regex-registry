@@ -312,12 +312,20 @@ export function EntryForm({ onFormSubmit, entry }: EntryFormProps) {
                 let result;
                 try {
                     result = await processEmail(e, email.contents)
+                    console.log("result", result)
                 } catch (e) {
                     setProcessedResult({
                         error: true,
                         matches: [],
                         message: `Failed to process email: ${e}`,
                     })
+                    setIsProcessingEmail(false);
+                    return
+                }
+                if (result && result.error) {
+                    setProcessedResult(result)
+                    setIsProcessingEmail(false);
+                    return
                 }
                 try {
                     const slug = "drafts/"+form.getValues("slug");
