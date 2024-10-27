@@ -54,9 +54,9 @@ export const formSchema = z.object({
                 if (value.includes(' ')) {
                     ctx.addIssue({
                         code: 'custom',
-                        message: 'Warning: Name contains spaces. They will be replaced with underscores.',
+                        message: 'Warning: Name contains spaces or dashes. They will be replaced with underscores.',
                     });
-                    return value.replace(/ /g, '_');
+                    return value.replace(/[ -]/g, '_');
                 }
                 return value;
             }),
