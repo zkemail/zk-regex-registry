@@ -11,7 +11,7 @@ const DKIM_CONTRACTS = {
 (async function() {
     const entries = await prisma.entry.findMany();
     for (const entry of entries) {
-        if (entry.contractAddress && !entry.contractAddress.startsWith("0x")) {
+        if (entry.contractAddress && entry.contractAddress.startsWith("0x")) {
             console.log(`Entry ${entry.slug} has contract address ${entry.contractAddress}, skipping`)
             await prisma.contractDeployment.create({
                 data: {
