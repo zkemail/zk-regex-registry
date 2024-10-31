@@ -1,7 +1,7 @@
 // schema.prisma
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["fullTextSearch"]
 }
 
@@ -12,21 +12,22 @@ datasource db {
 }
 
 model Entry {
-  id          String     @id @default(cuid())
-  title       String
-  slug        String     @unique
-  description String
-  createdAt   DateTime   @default(now()) @map(name: "created_at")
-  updatedAt   DateTime   @updatedAt @map(name: "updated_at")
-  createdBy   String
-  tags        String[]
-  status      String     @default("PENDING")
-  parameters  Json
-  ProofJob    ProofJob[]
-  emailQuery  String @default("")
-  verifierContractAddress String? 
-  contractAddress String? 
-  withModal     Boolean    @default(false)
+  id                      String               @id @default(cuid())
+  title                   String
+  slug                    String               @unique
+  description             String
+  createdAt               DateTime             @default(now()) @map(name: "created_at")
+  updatedAt               DateTime             @updatedAt @map(name: "updated_at")
+  createdBy               String
+  tags                    String[]
+  status                  String               @default("PENDING")
+  parameters              Json
+  ProofJob                ProofJob[]
+  emailQuery              String               @default("")
+  verifierContractAddress String?
+  contractAddress         String?
+  withModal               Boolean              @default(false)
+  ContractDeployment      ContractDeployment[]
 
   @@map("entries")
 }
@@ -55,4 +56,31 @@ model ApiKey {
   ProofJob  ProofJob[]
 
   @@map("api_keys")
+}
+
+model ContractDeployment {
+  id                      String   @id @default(cuid())
+  createdAt               DateTime @default(now()) @map(name: "created_at")
+  updatedAt               DateTime @updatedAt @map(name: "updated_at")
+  status                  String   @default("PENDING")
+  verifierContractAddress String?
+  contractAddress         String?
+  chainName               String
+  entryId                 String
+  entry                   Entry    @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  error                   String?
+
+  @@map("contract_deployments")
+}
+
+model Chain {
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now()) @map(name: "created_at")
+  updatedAt       DateTime @updatedAt @map(name: "updated_at")
+  chainId         String
+  chainName       String
+  dkimContractAddress String
+  rpcUrl            String
+
+  @@map("chains")
 }

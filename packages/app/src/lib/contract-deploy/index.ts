@@ -8,15 +8,25 @@ import { verify } from "crypto";
 
 import { bytesToHex, createPublicClient, createWalletClient, getAddress, Hex, http, isHex, parseAbi, toBytes, toHex } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { sepolia, foundry, optimismSepolia } from 'viem/chains';
+import { sepolia, foundry, optimismSepolia, arbitrumSepolia, arbitrum, optimism, Chain, mainnet, scrollSepolia, scroll } from 'viem/chains';
 import { pki } from "node-forge";
 import { toCircomBigIntBytes } from "@zk-email/helpers";
 import { usePublicClient } from "wagmi";
+import prisma from "../prisma";
 
 const CONTRACT_OUT_DIR = "./output/contract";
 const CODE_OUT_DIR = "./output/code";
 const CHAIN_ID = process.env.CHAIN_ID || "1";
-const CHAIN = sepolia;
+export const CHAINS: { [key: string]: Chain } = {
+    "Ethereum": mainnet,
+    "Ethereum Sepolia": sepolia,
+    "Arbitrum Sepolia": arbitrumSepolia,
+    "Arbitrum": arbitrum,
+    "Optimism Sepolia": optimismSepolia,
+    "Optimism": optimism,
+    "Scroll Sepolia": scrollSepolia,
+    "Scroll": scroll,
+}
 
 export async function deployContract(entry: Entry): Promise<void> {
     const contractDir = path.join(CODE_OUT_DIR, entry.slug, 'contract')
@@ -41,12 +51,16 @@ export async function deployContract(entry: Entry): Promise<void> {
     })
 }
 
-export async function deployContractWithModal(entry: Entry): Promise<void> {
+export async function deployContractWithModal(entry: Entry, chainName: string): Promise<void> {
     const contractDir = path.join(CODE_OUT_DIR, entry.slug, 'contract');
-
+    const chain = await prisma.chain.findFirstOrThrow({where: {chainName}})
+    
     // Environment variables needed for deployment
     const env = {
         ...process.env,
+        RPC_URL: chain.rpcUrl,
+        CHAIN_ID: chain.chainId,
+        DKIM_REGISTRY: chain.dkimContractAddress,
         PROJECT_SLUG: entry.slug,
         CIRCUIT_NAME: (entry.parameters as any).name as string,
         CONTRACT_PATH: contractDir,
@@ -127,7 +141,14 @@ export async function readContractAddresses(entry: Entry): Promise<{ verifier: s
     return result;
 }
 
-export async function addDkimEntry(entry: Entry): Promise<void> {
+export async function addDkimEntry(entry: Entry, chainName: string): Promise<void> {
+    const chain = await prisma.chain.findFirstOrThrow({where: {chainName}});
+    if (!chain.dkimContractAddress) {
+        throw new Error("DKIM registry not found for chain")
+    }
+    if (!CHAINS[chainName]) {
+        throw new Error(`Chain ${chainName} not found`)
+    }
     const domain = (entry.parameters as any).senderDomain as string;
     const selector = (entry.parameters as any).dkimSelector as string;
     const res = await fetch(`https://archive.prove.email/api/key?domain=${domain}`);
@@ -150,7 +171,7 @@ export async function addDkimEntry(entry: Entry): Promise<void> {
     const chunkedKey = toCircomBigIntBytes(BigInt(pubkey.n.toString()));
     const hashedKey = BigInt(await pubKeyHasher(chunkedKey));
 
-    const isDKIMPublicKeyHashValid = await checkDKIMPublicKeyHash(domain, hashedKey);
+    const isDKIMPublicKeyHashValid = await checkDKIMPublicKeyHash(domain, hashedKey, chainName);
     if (isDKIMPublicKeyHashValid) {
         console.log(`DKIM key already exists for domain ${domain} selector ${selector}`);
         return;
@@ -163,13 +184,13 @@ export async function addDkimEntry(entry: Entry): Promise<void> {
     const account = privateKeyToAccount(privateKey as Hex);
     const client = createWalletClient({
         account,
-        chain: CHAIN,
+        chain: CHAINS[chainName],
         transport: http()
     });
 
 
     // Prepare contract interaction
-    const dkimContract = process.env.DKIM_REGISTRY;
+    const dkimContract = chain.dkimContractAddress;
     if (!dkimContract) {
         throw new Error('DKIM_REGISTRY not found in environment variables');
     }
@@ -194,16 +215,19 @@ export async function addDkimEntry(entry: Entry): Promise<void> {
     console.log(`Transaction sent: ${hash}`);
 }
 
-export async function checkDKIMPublicKeyHash(domain: string, pubkeyHash: bigint): Promise<boolean> {
-    const dkimContract = process.env.DKIM_REGISTRY;
-    if (!dkimContract) {
-        throw new Error('DKIM_REGISTRY not found in environment variables');
+export async function checkDKIMPublicKeyHash(domain: string, pubkeyHash: bigint, chainName: string): Promise<boolean> {
+    const chain = await prisma.chain.findFirstOrThrow({where: {chainName}});
+    if (!chain.dkimContractAddress) {
+        throw new Error("DKIM registry not found for chain")
     }
-    const contractAddress = getAddress(dkimContract as Hex); // Replace 'X' with the actual contract address
+    if (!CHAINS[chainName]) {
+        throw new Error(`Chain ${chainName} not found`)
+    }
+    const contractAddress = getAddress(chain.dkimContractAddress as Hex); // Replace 'X' with the actual contract address
     const abi = parseAbi(["function isDKIMPublicKeyHashValid( string memory domainName, bytes32 publicKeyHash) external view returns (bool)"]);
     // use viem to read the contract function
     const publicClient = createPublicClient({
-        chain: CHAIN,
+        chain: CHAINS[chainName],
         transport: http()
     });
 
