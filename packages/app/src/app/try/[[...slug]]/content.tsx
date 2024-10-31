@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Entry } from "@prisma/client";
+import { Chain, ContractDeployment, Entry } from "@prisma/client";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { useState, useEffect, FormEvent } from "react";
 import { useGoogleAuth, fetchEmailList, fetchEmailsRaw, useZkEmailSDK } from "@zk-email/zk-email-sdk";
@@ -18,9 +18,14 @@ import { SimpleDialog } from "@/components/simple-dialog";
 import { calculateSignalLength } from "@/lib/code-gen/utils";
 import { redeployContracts } from "./action";
 import { getProofLogs } from "@/lib/models/logs";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectValue } from "@/components/ui/select";
+import { SelectTrigger } from "@radix-ui/react-select";
+import { FormControl, FormField } from "@/components/ui/form";
 
 export interface ContentProps {
-    entry: Entry
+    entry: Entry,
+    supportedChains: Chain[],
+    deployedContracts: ContractDeployment[],
 }
 
 type RawEmailResponse = {
@@ -31,9 +36,18 @@ type RawEmailResponse = {
 
 type Email = RawEmailResponse & { selected: boolean, inputs?: any, error?: string, body?: string };
 
+const chains = {
+    "Ethereum": "",
+    "ETH Sepolia": "",
+    "Arbitrum Testnet": "",
+    "Arbitrum": ""
+}
+
 export function PageContent(props: ContentProps) {
     const workers = new Map<string, boolean>();
     const entry = props.entry;
+    const supportedChains = props.supportedChains;
+    const deployedContracts = props.deployedContracts;
     const {
         googleAuthToken,
         isGoogleAuthed,
@@ -61,6 +75,8 @@ export function PageContent(props: ContentProps) {
     const [isRedeploying, setIsRedeploying] = useState<boolean>(false);
     const [proofLogs, setProofLogs] = useState<Record<string, string>>({});
     const [emailPageToken, setEmailPageToken] = useState<string|undefined>("0");
+    const [selectedChain, setSelectedChain] = useState<string>("Ethereum Sepolia");
+    const [selectedContracts, setSelectedContracts] = useState<(ContractDeployment|null)>(null);
 
     useEffect(() => {
         if (!inputWorkers[entry.slug]) {
@@ -68,6 +84,14 @@ export function PageContent(props: ContentProps) {
         }
         filterEmails(entry.emailQuery)
     }, [googleAuthToken, inputWorkers])
+
+    useEffect(() => {
+        const deployed = deployedContracts.find(d => d.chainName == selectedChain)
+        if (!deployed) {
+            return setSelectedContracts(null);
+        } 
+        setSelectedContracts(deployed)
+    }, [selectedChain])
 
     function filterEmails(query: string) {
         const fetchData = async () => {
@@ -162,7 +186,7 @@ export function PageContent(props: ContentProps) {
     }
 
     function redeployContractsHandler() {
-        redeployContracts(entry);
+        redeployContracts(entry, selectedChain);
         setIsRedeploying(true);
         setTimeout(() => {window.location.reload()}, 30000);
     }
@@ -465,10 +489,24 @@ export function PageContent(props: ContentProps) {
                             </div>
                             <div className="mb-4">
                                 <h4 className="text-2xl md:text-2xl tracking-tighter max-w-xl text-left font-extrabold mb-4">
-                                    Step 4: Verify proofs on-chain (Sepolia)
+                                    Step 4: Verify proofs on-chain 
                                 </h4>
+                                <Select value={selectedChain} onValueChange={setSelectedChain}>
+                                    <SelectTrigger>
+                                        Deploy to <b className="font-bold outline-1 outline-black outline pl-2 pr-2 ml-2">{selectedChain}</b>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectLabel>Chain</SelectLabel>
+                                            {supportedChains.map(e => (<SelectItem key={e.id} value={e.chainName}>{e.chainName}</SelectItem>))}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
                                 <div className="flex flex-row items-center">
-                                    <p><b className="font-extrabold">Verification Contract:</b> {entry.contractAddress || "Not deployed yet"}</p>
+                                    {selectedContracts?.error && <p>Error deploying contract: {selectedContracts.error}</p>}
+                                </div>
+                                <div className="flex flex-row items-center">
+                                    <p><b className="font-extrabold">Verification Contract:</b> {selectedContracts?.contractAddress || "Not deployed yet"}</p>
                                     <SimpleDialog title="Verification Contract" trigger={<Button className="font-extrabold" variant="link">View ABI</Button>}>
                                         <code className="text-xs">
                                             <pre>
@@ -504,7 +542,7 @@ export function PageContent(props: ContentProps) {
                                         </code>
                                     </SimpleDialog>
                                 </div>
-                                <p><b className="font-bold">Groth16 Contract:</b> {entry.verifierContractAddress || "Not deployed yet"}</p>
+                                <p><b className="font-bold">Groth16 Contract:</b> {selectedContracts?.verifierContractAddress || "Not deployed yet"}</p>
                                 <div className="flex flex-row">
                                     <ConnectButton />
                                     <Button className="ml-4" variant="outline" onClick={redeployContractsHandler}>{isRedeploying ? <><LoaderCircle className="animate-spin" /> Reloading in ~30s...</> : "Redeploy Contracts"}</Button>

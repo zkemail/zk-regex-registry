@@ -1,39 +1,47 @@
 import { generateCodeLibrary } from "@/lib/code-gen/gen";
 import { addDkimEntry, buildContract, deployContract, readContractAddresses, deployContractWithModal } from "@/lib/contract-deploy"
-import { getFirstUndeployedEntry } from "@/lib/models/entry"
 import prisma from "@/lib/prisma"
+import { error } from "console";
+
+async function getUndeployedEntry() {
+    const deployment = await prisma.contractDeployment.findFirst({where: {status: "PENDING"}, include: {entry: true}})
+    return deployment;
+}
 
 async function startContractDeployerService() {
     while (true) {
         await new Promise(resolve => setTimeout(resolve, 1000));
-        const entry = await getFirstUndeployedEntry();
-        if (entry) {
+        const deployment = await getUndeployedEntry();
+        if (deployment) {
             try {
+                const entry = deployment.entry;
                 if (entry.withModal) {
-                    await deployContractWithModal(entry);
+                    await deployContractWithModal(entry, deployment.chainName);
                 } else {
                     await generateCodeLibrary(entry.parameters, entry.slug, entry.status);
                     await deployContract(entry);
                 }
-                await addDkimEntry(entry);
+                await addDkimEntry(entry, deployment.chainName);
                 const addresses = await readContractAddresses(entry);
-                await prisma.entry.update({
+                await prisma.contractDeployment.update({
                     where: {
-                        id: entry.id
+                        id: deployment.id
                     },
                     data: {
+                        status: "COMPLETED",
                         verifierContractAddress: addresses.verifier,
-                        contractAddress: addresses.contract
+                        contractAddress: addresses.contract,
+                        error: null,
                     }
                 });
             } catch (error) {
-                await prisma.entry.update({
+                await prisma.contractDeployment.update({
                     where: {
-                        id: entry.id
+                        id: deployment.id
                     },
                     data: {
-                        verifierContractAddress: "error:" + (error as Error).toString(),
-                        contractAddress: "error:" + (error as Error).toString()
+                        status: "ERROR",
+                        error: "error:" + (error as Error).toString(),
                     }
                 });
             }
