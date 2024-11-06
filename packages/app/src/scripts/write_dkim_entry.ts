@@ -10,9 +10,9 @@ import { prisma } from "@/lib/prisma";
     for (const entry of entries) {
         console.log("Adding DKIM entry for entry: ", entry.slug)
         try {
-            await addDkimEntry(entry, "Ethereum Sepolia")
-        } catch {
-            console.log("Error adding DKIM entry for: ", entry.slug);
+            await addDkimEntry(entry, "Arbitrum Sepolia")
+        } catch (e) {
+            console.log("Error adding DKIM entry for: ", entry.slug, e);
         }
     }
 })()

@@ -12,6 +12,7 @@ import { sepolia, foundry, optimismSepolia, arbitrumSepolia, arbitrum, optimism,
 import { pki } from "node-forge";
 import { toCircomBigIntBytes } from "@zk-email/helpers";
 import { usePublicClient } from "wagmi";
+import { Chain as ChainType } from "prisma/prisma-client"
 import prisma from "../prisma";
 
 const CONTRACT_OUT_DIR = "./output/contract";
@@ -153,81 +154,84 @@ export async function addDkimEntry(entry: Entry, chainName: string): Promise<voi
     const selector = (entry.parameters as any).dkimSelector as string;
     const res = await fetch(`https://archive.prove.email/api/key?domain=${domain}`);
     const body = await res.json();
-    //    console.log(body);
 
     if (!body.length) {
         throw new Error(`No DKIM key found for domain ${domain}`);
     }
 
-    let key: { selector: string, value: string };
+    // If selector is provided, only add the key for that selector
+    // Otherwise, add all keys to the registry
+    let keys: { selector: string, value: string }[] = [];
     if (selector) {
-        key = body.find((b: { selector: string }) => b.selector === selector);
+        keys.push(body.find((b: { selector: string }) => b.selector === selector));
     } else {
-        key = body[0];
-    }
-    const pubKeyData = key.value.split(";").filter((part: string) => part.includes("p="));
-    const pkiStr = `-----BEGIN PUBLIC KEY-----${pubKeyData[0].split("=")[1]}-----END PUBLIC KEY-----`;
-    const pubkey = pki.publicKeyFromPem(pkiStr);
-    const chunkedKey = toCircomBigIntBytes(BigInt(pubkey.n.toString()));
-    const hashedKey = BigInt(await pubKeyHasher(chunkedKey));
-
-    const isDKIMPublicKeyHashValid = await checkDKIMPublicKeyHash(domain, hashedKey, chainName);
-    if (isDKIMPublicKeyHashValid) {
-        console.log(`DKIM key already exists for domain ${domain} selector ${selector}`);
-        return;
+        keys = body.map((b: { selector: string, value: string }) => ({ selector: b.selector, value: b.value }));
     }
 
-    const privateKey = process.env.PRIVATE_KEY;
-    if (!privateKey) {
-        throw new Error('PRIVATE_KEY not found in environment variables');
+    console.log(`Adding ${keys.length} DKIM keys to ${chainName} registry for domain ${domain}`);
+
+    for (const key of keys) {
+        const pubKeyData = key.value.split(";").filter((part: string) => part.includes("p="));
+        if (pubKeyData[0].length < 4) {
+            console.log(`No valid DKIM key found for domain ${domain} selector ${key.selector}. Found ${pubKeyData}.`);
+            continue;
+        }
+        const pkiStr = `-----BEGIN PUBLIC KEY-----${pubKeyData[0].split("=")[1]}-----END PUBLIC KEY-----`;
+        const pubkey = pki.publicKeyFromPem(pkiStr);
+        const chunkedKey = toCircomBigIntBytes(BigInt(pubkey.n.toString()));
+        const hashedKey = BigInt(await pubKeyHasher(chunkedKey));
+
+        const isDKIMPublicKeyHashValid = await checkDKIMPublicKeyHash(domain, hashedKey, chain);
+        if (isDKIMPublicKeyHashValid) {
+            console.log(`DKIM key already exists for domain ${domain} selector ${key.selector}`);
+            continue;
+        }
+
+        const privateKey = process.env.PRIVATE_KEY;
+        if (!privateKey) {
+            throw new Error('PRIVATE_KEY not found in environment variables');
+        }
+        const account = privateKeyToAccount(privateKey as Hex);
+        const client = createWalletClient({
+            account,
+            chain: CHAINS[chainName],
+            transport: http()
+        });
+
+
+        // Prepare contract interaction
+        const dkimContract = chain.dkimContractAddress;
+        if (!dkimContract) {
+            throw new Error('DKIM_REGISTRY not found in environment variables');
+        }
+        const contractAddress = getAddress(dkimContract as Hex); // Replace 'X' with the actual contract address
+        const abi = [{
+            name: 'setDKIMPublicKeyHash',
+            type: 'function',
+            inputs: [
+                { name: 'domain', type: 'string' },
+                { name: 'pubkeyHash', type: 'bytes32' }
+            ],
+        }];
+
+        // Send transaction
+        const hash = await client.writeContract({
+            address: contractAddress,
+            abi,
+            functionName: 'setDKIMPublicKeyHash',
+            args: [domain, bytesToHex(toBytes(hashedKey), { size: 32 })],
+        });
+
+        console.log(`Transaction sent: ${hash}`);
     }
-    const account = privateKeyToAccount(privateKey as Hex);
-    const client = createWalletClient({
-        account,
-        chain: CHAINS[chainName],
-        transport: http()
-    });
-
-
-    // Prepare contract interaction
-    const dkimContract = chain.dkimContractAddress;
-    if (!dkimContract) {
-        throw new Error('DKIM_REGISTRY not found in environment variables');
-    }
-    const contractAddress = getAddress(dkimContract as Hex); // Replace 'X' with the actual contract address
-    const abi = [{
-        name: 'setDKIMPublicKeyHash',
-        type: 'function',
-        inputs: [
-            { name: 'domain', type: 'string' },
-            { name: 'pubkeyHash', type: 'bytes32' }
-        ],
-    }];
-
-    // Send transaction
-    const hash = await client.writeContract({
-        address: contractAddress,
-        abi,
-        functionName: 'setDKIMPublicKeyHash',
-        args: [domain, bytesToHex(toBytes(hashedKey), { size: 32 })],
-    });
-
-    console.log(`Transaction sent: ${hash}`);
 }
 
-export async function checkDKIMPublicKeyHash(domain: string, pubkeyHash: bigint, chainName: string): Promise<boolean> {
-    const chain = await prisma.chain.findFirstOrThrow({where: {chainName}});
-    if (!chain.dkimContractAddress) {
-        throw new Error("DKIM registry not found for chain")
-    }
-    if (!CHAINS[chainName]) {
-        throw new Error(`Chain ${chainName} not found`)
-    }
+export async function checkDKIMPublicKeyHash(domain: string, pubkeyHash: bigint, chain: ChainType): Promise<boolean> {
     const contractAddress = getAddress(chain.dkimContractAddress as Hex); // Replace 'X' with the actual contract address
     const abi = parseAbi(["function isDKIMPublicKeyHashValid( string memory domainName, bytes32 publicKeyHash) external view returns (bool)"]);
     // use viem to read the contract function
     const publicClient = createPublicClient({
-        chain: CHAINS[chainName],
+        chain: CHAINS[chain.chainName],
         transport: http()
     });
 
