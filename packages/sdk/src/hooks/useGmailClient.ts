@@ -105,8 +105,7 @@ export async function fetchProfile(
             rawBase64 += '=';
           }
   
-          const decodedContents = atob(rawBase64);
-  
+          const decodedContents = b64DecodeUnicode(rawBase64);
           const subject = decodedContents.match(/Subject: (.*)/)?.[1] || 'No Subject';
   
           return {
@@ -126,3 +125,9 @@ export async function fetchProfile(
       throw new Error('Error fetching emails');
     }
   };
+
+function b64DecodeUnicode(str: string) {
+  return decodeURIComponent(Array.prototype.map.call(atob(str), function (c: string) {
+    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+  }).join(''))
+}
