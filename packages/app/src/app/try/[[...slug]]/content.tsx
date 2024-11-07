@@ -108,7 +108,12 @@ export function PageContent(props: ContentProps) {
 
             const processedEmails: Email[] = [];
             for (const email of emails) {
-                processedEmails.push(await mapEmail(email));
+                const parsed = await PostalMime.parse(email.decodedContents);
+                const parsedEmail = {
+                    ...email,
+                    subject: parsed.subject || "Error parsing subject",
+                }
+                processedEmails.push(await mapEmail(parsedEmail));
             }
             setMessages([...messages, ...processedEmails])
         }
