@@ -8,6 +8,9 @@ export async function generateCircuitInputs(rawEmail, inputs) {
         shaPrecomputeSelector: "<%- shaPrecomputeSelector %>",
         enableBodyMasking: true,
         mask: JSON.parse(inputs["mask"]) || Array.apply(null, {length: <%- emailBodyMaxLength %> }).map(() => 0)
+    },
+    {
+        domain: "<%- senderDomain %>",
     });
 
     const emailBodyString = circuitInputs.emailBody ? Buffer.from(circuitInputs.emailBody.map(Number)).toString('ascii') : null;

@@ -2516,10 +2516,10 @@
     "@zk-email/zk-regex-circom" "^2.1.0"
     circomlib "^2.0.5"
 
-"@zk-email/helpers@6.1.1":
-  version "6.1.1"
-  resolved "https://registry.yarnpkg.com/@zk-email/helpers/-/helpers-6.1.1.tgz#3172d07c7fd1ce56a2957dc9ff32b0bc7d1592a3"
-  integrity sha512-u3LYa8rLdLCvy4FpgXOfQNJPOIrj26CwxLDEYOwyDwYpdSdvEgqE/FL1h2Rwkr1TdbneWaCeSVQC4jhtQaXswg==
+"@zk-email/helpers@6.2.0":
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/@zk-email/helpers/-/helpers-6.2.0.tgz#be0fd0f4626b3b8d1f8e16cafa4936bd6e138bb0"
+  integrity sha512-BRrVjRKxfcz8waPIVYLn3D2y9dCBafdBCEtjgzbz9Jh8WyJZJNKMJ3MVjm28V5He+H6YyOcatSItO+VIuQ1Nrw==
   dependencies:
     addressparser "^1.0.1"
     atob "^2.1.2"
