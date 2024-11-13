@@ -313,7 +313,7 @@ export function PageContent(props: ContentProps) {
     }
 
     function verifyProof(id: string) {
-        if (!isConnected) {
+        if (!isConnected || !selectedContracts) {
             return // Don't proceed if wallet is not connected
         }
         
@@ -346,7 +346,7 @@ export function PageContent(props: ContentProps) {
                 "stateMutability": "nonpayable",
                 "type": "function"
             }] as const,
-            address: entry.contractAddress! as Hex,
+            address: selectedContracts.contractAddress! as Hex,
             functionName: "verify",
             args: circuitOutputToArgs({
                 proof: proofStatus[id].proof,
