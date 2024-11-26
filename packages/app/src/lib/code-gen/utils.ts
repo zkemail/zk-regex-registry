@@ -17,8 +17,10 @@ export function mapPrefixRegex(parameters: any): any {
 export function getPrefixRegex(parts: { is_public: boolean, regex_def: string }[]): string {
     let prefixRegex = "";
     for (let part of parts) {
-        if (!part.is_public) prefixRegex = prefixRegex + part.regex_def;
-        if (!part.is_public && !part.regex_def) throw new Error('Part has to have a nonempty regex with is_public = false')
+        if (!part.is_public) {
+            if (!part.regex_def) throw new Error('Part has to have a nonempty regex with is_public = false');
+            prefixRegex = prefixRegex + part.regex_def;
+        }
         else break;
     }
     if (!prefixRegex) throw new Error('Part has to have a regex with is_public = false in order to find it later')
