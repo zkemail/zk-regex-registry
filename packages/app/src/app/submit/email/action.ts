@@ -27,7 +27,7 @@ export async function processEmail(values: z.infer<typeof formSchema>, email: st
     let headerString;
 
     try {
-        result = await verifyDKIMSignature(email, values.parameters.senderDomain)
+        result = await verifyDKIMSignature(email, values.parameters.senderDomain, false, true)
     } catch (e: any) {
         return {
             error: true,
