@@ -28,6 +28,9 @@ export function fillDefaultParameters(parameters: any) {
     if (parameters.emailBodyMaxLength === undefined) {
         parameters.emailBodyMaxLength = 4032
     }
+    if (parameters.emailHeaderMaxLength === undefined) {
+        parameters.emailHeaderMaxLength = 1024
+    }
     if (parameters.externalInputs === undefined) {
         parameters.externalInputs = []
     } 
