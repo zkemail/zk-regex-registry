@@ -9,7 +9,11 @@ import { prisma } from "@/lib/prisma";
     });
 
     for (const entry of entries) {
+        const parameters = entry.parameters as any;
+        if (parameters.emailHeaderMaxLength) {
+            parameters.emailHeaderMaxLength = 1024;
+        }
         console.log(`Generating code library for ${entry.slug}`);
-        await generateCodeLibrary(entry.parameters, entry.slug, entry.status);
+        await generateCodeLibrary(parameters, entry.slug, entry.status);
     }
 })();
