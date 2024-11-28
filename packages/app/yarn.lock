@@ -2536,10 +2536,10 @@
   resolved "https://registry.yarnpkg.com/@zk-email/relayer-utils/-/relayer-utils-0.4.2.tgz#8e13277c1c14ac7c17a0df60803eb8ab5a3d0091"
   integrity sha512-IqJOQ75xou1H6LpTEekYMkSFtBKW2KNtCkbGVKg/vps3w3xso/qSzT8myHYKw7nm69bPRRMPVkhtFyyd33DDhQ==
 
-"@zk-email/zk-email-sdk@^1.0.6":
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/@zk-email/zk-email-sdk/-/zk-email-sdk-1.0.6.tgz#8bbe42857457f3e931969271f56167448ff1681c"
-  integrity sha512-e/ySWOOh/cQBjF1lhqix6meZIRV4BycdQ7uwp5+RpS0XnvnOou5ERgC/09zaWFXsKfGWNBmc06C4fImiFyn5Yg==
+"@zk-email/zk-email-sdk@^1.0.7":
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/@zk-email/zk-email-sdk/-/zk-email-sdk-1.0.7.tgz#b026406d313d360c50bb9e8e06adec260a5a4f26"
+  integrity sha512-1yz7hTtPU3pba/HmT+uqa3hkMdbhE8IfNPJ51eneFWRD8+3uxCHoeY5FwBGaVCy5QjID7e2J1zoaNqZgaqIyYA==
   dependencies:
     "@react-oauth/google" "^0.12.1"
     js-base64 "^3.7.7"
