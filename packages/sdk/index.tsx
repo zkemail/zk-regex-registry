@@ -19,16 +19,19 @@ interface ProvidersProps {
 function ZkEmailSDKProvider({children, clientId, zkEmailSDKRegistryUrl}: ProvidersProps) {
 
   const [inputWorkers, setInputWorkers] = useState<Record<string, Worker>>({});
+  const [inputWorkersPromises, setInputWorkersPromises] = useState<Record<string, Promise<Worker>>>({});
   const [proofStatus, setProofStatus] = useState<Record<string, ProofStatus>>({});
 
   function createInputWorker(name: string): void {
-      fetch(`${zkEmailSDKRegistryUrl}/api/script/circuit_input/${name}`, {headers: {
+      const workerPromise = fetch(`${zkEmailSDKRegistryUrl}/api/script/circuit_input/${name}`, {headers: {
         'Accept': 'text/javascript'
       }}).then(async r => {
         const js = await r.text();
         const w = new Worker(`data:text/javascript;base64,${encode(js)}`)
         setInputWorkers({...inputWorkers, [name]: w});
+        return w;
       })
+      setInputWorkersPromises({...inputWorkersPromises, [name]: workerPromise});
   }
 
   useEffect(() => {
@@ -79,7 +82,11 @@ function ZkEmailSDKProvider({children, clientId, zkEmailSDKRegistryUrl}: Provide
   }
 
   async function generateInputFromEmail(name: string, email: string, externalInputs: Record<string, string>) {
-      const worker = inputWorkers[name];
+      let worker = inputWorkers[name];
+      // If worker has not been loaded, wait for it to load
+      if (!worker) {
+        worker = await inputWorkersPromises[name];
+      }
       return new Promise((resolve, reject) => {
         worker.onmessage = (event: any) => {
           if (event.data.error) {
