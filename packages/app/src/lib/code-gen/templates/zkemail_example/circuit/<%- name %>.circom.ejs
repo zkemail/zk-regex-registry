@@ -49,18 +49,30 @@ template <%- name %>(maxHeaderLength, maxBodyLength, n, k, packSize) {
 
 <% values.forEach(function(value){ %>
     // <%- value.name.toUpperCase() %> Extraction
-    signal input <%- value.name %>RegexIdx;
     var <%- value.name %>MaxLength = <%- value.maxLength %>;
-    signal <%- value.name %>RegexOut, <%- value.name %>RegexReveal[<%- (value.location === 'body') ? 'maxBodyLength' : 'maxHeaderLength' %>];
 <% if (["from", "to"].includes(value.location)) { %>
+    <% // Custom regex circuit to extract from and to%>
+    signal <%- value.name %>RegexOut, <%- value.name %>RegexReveal[<%- (value.location === 'body') ? 'maxBodyLength' : 'maxHeaderLength' %>];
     (<%- value.name %>RegexOut, <%- value.name %>RegexReveal) <== <%- value.location === 'to' ? 'ToAddrRegex' : 'FromAddrRegex' %>(maxHeaderLength)(emailHeader);
-<% } else { %>
-    (<%- value.name %>RegexOut, <%- value.name %>RegexReveal) <== <%- value.name %>Regex(<%- (value.location === 'body') ? 'maxBodyLength' : 'maxHeaderLength' %>)(<%- (value.location === 'body') ? 'emailBody' : 'emailHeader' %>);
-<% } %>
     <%- value.name %>RegexOut === 1;
-
     signal output <%- value.name %>PackedOut[computeIntChunkLength(<%- value.name %>MaxLength)];
     <%- value.name %>PackedOut <== PackRegexReveal(<%- (value.location === 'body') ? 'maxBodyLength' : 'maxHeaderLength' %>, <%- value.name %>MaxLength)(<%- value.name %>RegexReveal, <%- value.name %>RegexIdx);
+<% } else { %>
+    <% if (value.parts.find(a => a.is_public)) { %>
+    <% // Handle case when regex have a public reveal%>
+    signal <%- value.name %>RegexOut, <%- value.name %>RegexReveal[<%- (value.location === 'body') ? 'maxBodyLength' : 'maxHeaderLength' %>];
+    signal input <%- value.name %>RegexIdx;
+    (<%- value.name %>RegexOut, <%- value.name %>RegexReveal) <== <%- value.name %>Regex(<%- (value.location === 'body') ? 'maxBodyLength' : 'maxHeaderLength' %>)(<%- (value.location === 'body') ? 'emailBody' : 'emailHeader' %>);
+    <%- value.name %>RegexOut === 1;
+    signal output <%- value.name %>PackedOut[computeIntChunkLength(<%- value.name %>MaxLength)];
+    <%- value.name %>PackedOut <== PackRegexReveal(<%- (value.location === 'body') ? 'maxBodyLength' : 'maxHeaderLength' %>, <%- value.name %>MaxLength)(<%- value.name %>RegexReveal, <%- value.name %>RegexIdx);
+    <% } else { %>
+    <% // Handle case when regex have no public reveal%>
+    signal <%- value.name %>RegexOut;
+    <%- value.name %>RegexOut <== <%- value.name %>Regex(<%- (value.location === 'body') ? 'maxBodyLength' : 'maxHeaderLength' %>)(<%- (value.location === 'body') ? 'emailBody' : 'emailHeader' %>);
+    <%- value.name %>RegexOut === 1;
+    <% } %>
+<% } %>
 <% }); %>
 
 }
