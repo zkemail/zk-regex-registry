@@ -13,8 +13,8 @@ secret = modal.Secret.from_name(
 path =  os.environ.get("PROOF_PATH", "")
 bucket_name = os.environ.get("BUCKET_NAME", "")
 
-with modal.enable_output():
-    with app.run():
+@app.local_entrypoint()
+def main():
         slug = os.environ["PROJECT_SLUG"]
         circuitName = os.environ["CIRCUIT_NAME"]
         with open(f"{path}/input.json", "r") as f:
@@ -52,9 +52,9 @@ def prove(slug: str, circuitName: str, input):
     error_logs += "Generating witness\n"
     process = subprocess.Popen(["node", f"/output/circuit/{slug}/{circuitName}_js/generate_witness.js", f"/output/circuit/{slug}/{circuitName}_js/{circuitName}.wasm", f"input.json", f"output.wtns"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     while True:
-        output = process.stdout.readline()
+        output = process.stdout.readline().decode("utf-8")
         print(output)
-        if output == b'' and process.poll() is not None:
+        if output == '' and process.poll() is not None:
             break
         if output:
             error_logs += output.strip() + "\n"
@@ -65,13 +65,12 @@ def prove(slug: str, circuitName: str, input):
         error_logs += f"Error generating witness with exit code {process.returncode}\n"
         return error_logs, None, None
 
-
     error_logs += "Generating proof\n"
     process = subprocess.Popen(["/rapidsnark/package/bin/prover_cuda", f"/output/circuit/{slug}/{circuitName}.zkey", f"output.wtns", f"proof.json", f"public.json"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     while True:
-        output = process.stdout.readline()
+        output = process.stdout.readline().decode("utf-8")
         print(output)
-        if output == b'' and process.poll() is not None:
+        if output == '' and process.poll() is not None:
             break
         if output:
             error_logs += output.strip() + "\n"
