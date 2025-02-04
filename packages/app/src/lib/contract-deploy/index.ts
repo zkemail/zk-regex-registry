@@ -194,7 +194,14 @@ export async function addDkimEntry(entry: Entry, chainName: string): Promise<voi
         const account = privateKeyToAccount(privateKey as Hex);
         const client = createWalletClient({
             account,
-            chain: CHAINS[chainName],
+            chain: {
+                ...CHAINS[chainName],
+                rpcUrls: {
+                    default: {
+                        http: [chain.rpcUrl as any]
+                    }
+                },
+            },
             transport: http()
         });
 
@@ -231,7 +238,14 @@ export async function checkDKIMPublicKeyHash(domain: string, pubkeyHash: bigint,
     const abi = parseAbi(["function isDKIMPublicKeyHashValid( string memory domainName, bytes32 publicKeyHash) external view returns (bool)"]);
     // use viem to read the contract function
     const publicClient = createPublicClient({
-        chain: CHAINS[chain.chainName],
+        chain: {
+            ...CHAINS[chain.chainName],
+            rpcUrls: {
+                default: {
+                    http: [chain.rpcUrl as any]
+                }
+            },
+        },
         transport: http()
     });
 
