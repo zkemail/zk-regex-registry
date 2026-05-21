@@ -1,5 +1,7 @@
 ## Getting started
-This guide will bring you through to submit a new pattern on the registry. You will need to have:
+This guide walks through submitting a new pattern to the registry. The maintained ZK Email documentation has the latest step-by-step pattern guide at [Creating a New Pattern](https://docs.zk.email/zk-email-sdk/creating-a-new-pattern).
+
+You will need to have:
 1. An email .eml file that you want to create proofs for
 2. Get yourself familiar with the `zk-regex` SDK on how to create a `json` file to generate your circuit
 	1. [Link to SDK](https://github.com/zkemail/zk-regex)
@@ -7,7 +9,7 @@ This guide will bring you through to submit a new pattern on the registry. You w
 
 ## Submitting a pattern
 
-Visit the [submit page](https://registry-dev.zkregex.com/submit) to submit it directly. The following are more explanation on each of the fields
+Visit the [ZK Email Registry](https://registry.zk.email/) and choose **Submit a new pattern** to submit it directly. The following are more explanation on each of the fields
 - **Pattern Title, Description**
 	- These can be anything
 - **Slug**

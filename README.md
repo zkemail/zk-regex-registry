@@ -18,6 +18,12 @@ ZK Regex Registry is an app that pools together all community created ZK Regex p
 - App generates the assets required for proving (e.g. r1cs, wasm, zkey, vkey) and provides an API to download them
 - Includes a React SDK to embed into your application for proof generation (see [SDK](./packages/sdk))
 
+## Guides
+
+- [Create a registry pattern](./docs/creating-a-pattern.md)
+- [Run a generated example project](./docs/running-the-example.md)
+- [Use the registry SDK](./docs/using-the-sdk.md)
+
 ## Project Structure
 
 ```
@@ -94,5 +100,4 @@ yarn circuit-gen
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
 
